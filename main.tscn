@@ -1,0 +1,158 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://FileMenuButton.gd" type="Script" id=1]
+[ext_resource path="res://main.gd" type="Script" id=2]
+[ext_resource path="res://SelectFileDialog.gd" type="Script" id=3]
+[ext_resource path="res://SettingsMenuButton.gd" type="Script" id=4]
+
+[node name="main" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+margin_right = 1024.0
+margin_bottom = 20.0
+
+[node name="FileMenuButton" type="MenuButton" parent="VBoxContainer/HBoxContainer"]
+margin_right = 35.0
+margin_bottom = 20.0
+size_flags_horizontal = 0
+text = "File"
+items = [ "Load directory...", null, 0, false, false, 0, 0, null, "", false ]
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SettingsMenuButton" type="MenuButton" parent="VBoxContainer/HBoxContainer"]
+margin_left = 39.0
+margin_right = 102.0
+margin_bottom = 20.0
+focus_mode = 2
+size_flags_horizontal = 0
+text = "Settings"
+items = [ "Set export folder...", null, 0, false, false, 0, 0, null, "", false, "Select ww2ogg.exe path...", null, 0, false, false, 1, 0, null, "", false ]
+script = ExtResource( 4 )
+
+[node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
+margin_top = 24.0
+margin_right = 1024.0
+margin_bottom = 600.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AudioListBox" type="VBoxContainer" parent="VBoxContainer/TabContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 4.0
+margin_top = 32.0
+margin_right = -4.0
+margin_bottom = -4.0
+
+[node name="FileSelectRow" type="Label" parent="VBoxContainer/TabContainer/AudioListBox"]
+margin_right = 1016.0
+margin_bottom = 14.0
+text = "Currently loaded file: None"
+
+[node name="FilterByRow" type="HBoxContainer" parent="VBoxContainer/TabContainer/AudioListBox"]
+margin_top = 18.0
+margin_right = 1016.0
+margin_bottom = 42.0
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="filterLabel" type="Label" parent="VBoxContainer/TabContainer/AudioListBox/FilterByRow"]
+margin_top = 5.0
+margin_right = 56.0
+margin_bottom = 19.0
+grow_horizontal = 0
+text = "Filter by:"
+
+[node name="filterField" type="LineEdit" parent="VBoxContainer/TabContainer/AudioListBox/FilterByRow"]
+margin_left = 60.0
+margin_right = 967.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+
+[node name="filterButton" type="Button" parent="VBoxContainer/TabContainer/AudioListBox/FilterByRow"]
+margin_left = 971.0
+margin_right = 1016.0
+margin_bottom = 24.0
+text = "Filter"
+
+[node name="ExtractRow" type="HBoxContainer" parent="VBoxContainer/TabContainer/AudioListBox"]
+margin_top = 46.0
+margin_right = 1016.0
+margin_bottom = 66.0
+
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/AudioListBox/ExtractRow"]
+margin_top = 3.0
+margin_right = 47.0
+margin_bottom = 17.0
+text = "Extract:"
+
+[node name="SelectedExtractButton" type="Button" parent="VBoxContainer/TabContainer/AudioListBox/ExtractRow"]
+margin_left = 51.0
+margin_right = 118.0
+margin_bottom = 20.0
+text = "Selected"
+
+[node name="AllExtractButton" type="Button" parent="VBoxContainer/TabContainer/AudioListBox/ExtractRow"]
+margin_left = 122.0
+margin_right = 151.0
+margin_bottom = 20.0
+text = "All"
+
+[node name="AudioListTree" type="Tree" parent="VBoxContainer/TabContainer/AudioListBox"]
+margin_top = 70.0
+margin_right = 1016.0
+margin_bottom = 540.0
+size_flags_vertical = 3
+hide_root = true
+select_mode = 2
+
+[node name="FileList" type="ItemList" parent="VBoxContainer/TabContainer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 4.0
+margin_top = 32.0
+margin_right = -4.0
+margin_bottom = -4.0
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+
+[node name="SelectFileDialog" type="FileDialog" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+rect_min_size = Vector2( 250, 87.5 )
+window_title = "Open a Directory"
+mode = 2
+script = ExtResource( 3 )
+
+[connection signal="text_entered" from="VBoxContainer/TabContainer/AudioListBox/FilterByRow/filterField" to="." method="_on_filterField_text_entered"]
+[connection signal="toggled" from="VBoxContainer/TabContainer/AudioListBox/FilterByRow/filterButton" to="." method="_on_filterButton_toggled"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/AudioListBox/ExtractRow/SelectedExtractButton" to="." method="_on_SelectedExtractButton_pressed"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/AudioListBox/ExtractRow/AllExtractButton" to="." method="_on_AllExtractButton_pressed"]
+[connection signal="button_pressed" from="VBoxContainer/TabContainer/AudioListBox/AudioListTree" to="." method="_on_AudioListTree_button_pressed"]
+[connection signal="item_activated" from="VBoxContainer/TabContainer/FileList" to="." method="_on_ItemList_item_activated"]
+[connection signal="dir_selected" from="SelectFileDialog" to="SelectFileDialog" method="_on_SelectFileDialog_dir_selected"]
+[connection signal="file_selected" from="SelectFileDialog" to="SelectFileDialog" method="_on_SelectFileDialog_file_selected"]
