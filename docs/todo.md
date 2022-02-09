@@ -14,10 +14,10 @@
 	- [ ] Converted (wem -> ogg)
 
 ### Audio player:
-- [ ] Add an audio player somewhere (bottom, top?)
-- [ ] Have `stop`, `play` and `pause` buttons.
-- [ ] Show name of playing audio file.
-- [ ] Show progress and info such as total play time.
+- [x] Add an audio player somewhere (bottom, top?)
+- [x] Have `stop`, `play` and `pause` buttons.
+- [x] Show name of playing audio file.
+- [x] Show progress and info such as total play time.
 
 ### Popups:
 - [ ] Add a popup for processing .bnk files from the file explorer to the bnk viewer.

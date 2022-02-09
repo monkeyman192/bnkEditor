@@ -8,11 +8,109 @@
 
 config_version=4
 
+_global_script_classes=[ {
+"base": "Node",
+"class": "BNK",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/BNK.gd"
+}, {
+"base": "Node",
+"class": "BNKHandler",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/BNKHandler.gd"
+}, {
+"base": "Node",
+"class": "BNK_XML_Parser",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/META/bnk_xml.gd"
+}, {
+"base": "StreamPeerBuffer",
+"class": "BitWiseStreamPeerBuffer",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/BitWiseStreamPeerBuffer.gd"
+}, {
+"base": "Node",
+"class": "Codebook",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/Codebook.gd"
+}, {
+"base": "Node",
+"class": "HIRC_OBJ",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/HIRC/HIRC.gd"
+}, {
+"base": "BitWiseStreamPeerBuffer",
+"class": "OGG",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/OGG.gd"
+}, {
+"base": "Node",
+"class": "Packet",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/Packet.gd"
+}, {
+"base": "Node",
+"class": "Utils",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/utils.gd"
+}, {
+"base": "BitWiseStreamPeerBuffer",
+"class": "WEM",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/WEM.gd"
+}, {
+"base": "HIRC_OBJ",
+"class": "_HIRC_02_SOUND_SFX",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/HIRC/HIRC_02_SoundSFX.gd"
+}, {
+"base": "HIRC_OBJ",
+"class": "_HIRC_03_EVENT_ACTION",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/HIRC/HIRC_03_EventAction.gd"
+}, {
+"base": "HIRC_OBJ",
+"class": "_HIRC_04_EVENT",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/HIRC/HIRC_04_Event.gd"
+}, {
+"base": "HIRC_OBJ",
+"class": "_HIRC_EVENT_DUMMY",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/HIRC/HIRC_00_Dummy.gd"
+}, {
+"base": "Node",
+"class": "crc",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/crc.gd"
+} ]
+_global_script_class_icons={
+"BNK": "",
+"BNKHandler": "",
+"BNK_XML_Parser": "",
+"BitWiseStreamPeerBuffer": "",
+"Codebook": "",
+"HIRC_OBJ": "",
+"OGG": "",
+"Packet": "",
+"Utils": "",
+"WEM": "",
+"_HIRC_02_SOUND_SFX": "",
+"_HIRC_03_EVENT_ACTION": "",
+"_HIRC_04_EVENT": "",
+"_HIRC_EVENT_DUMMY": "",
+"crc": ""
+}
+
 [application]
 
 config/name="BNK_loader"
 run/main_scene="res://main.tscn"
 config/icon="res://icon.png"
+
+[editor_plugins]
+
+enabled=PoolStringArray( "res://addons/bnk_handler/plugin.cfg" )
 
 [physics]
 
