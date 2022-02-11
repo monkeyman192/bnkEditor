@@ -10,11 +10,11 @@ const wemFile = preload("res://addons/bnk_handler/WEM.gd")
 const bnkXmlParser = preload("res://addons/bnk_handler/META/bnk_xml.gd")
 const HIRC_ENUMS = preload("res://addons/bnk_handler/HIRC/HIRC_enums.gd")
 
-onready var audioController = get_node("../../../../../NowPlayingBox")
+onready var audioController = get_tree().get_root().get_node("main/VBoxContainer/NowPlayingBox")
 
 var audio_tree_data = Dictionary()
 var audio_mapping = Dictionary()
-var curr_loaded_bnk: String = ""
+var bnk_fullpath: String = ""
 var _bnkFile
 var root: TreeItem
 var program_settings: Dictionary
@@ -40,17 +40,17 @@ func deselect_all():
 			curr_selected.deselect(0)
 
 
-func select_audio(audio_id: int) -> bool:
+func select_audio(audio_id: int) -> int:
 	# Scroll to and select the audio with the specified id.
 	var req_treeItem = audio_mapping.get(audio_id)
 	if req_treeItem != null:
 		self.deselect_all()
-		self.scroll_to_item(req_treeItem)
 		req_treeItem.select(0)
 		req_treeItem.get_parent().collapsed = false
-		return true
+		self.scroll_to_item(req_treeItem)
+		return OK
 	else:
-		return false
+		return FAILED
 
 
 func populate_audio_tree(data: Dictionary):
@@ -90,11 +90,20 @@ func _on_AudioListTree_button_pressed(item: TreeItem, column: int, id: int):
 			play_wem("%s.wem" % audio_id, wem)
 		elif audio_loc == bnkXmlParser.AUDIO_TYPE.REFERENCED:
 			# Load the wem file from disk. Look in the root directory.
-			var wem_fullpath = program_settings["data_dir"] + "/%s.wem" % audio_id
-			print("loading external file %s" % wem_fullpath)
-			var wem = wemFile.new()
-			wem.open(wem_fullpath)
-			play_wem(item.get_text(0).get_file(), wem)
+			var possible_paths = Utils.filepath_iter(
+				program_settings["data_dir"],
+				bnk_fullpath.get_base_dir()
+			)
+			for path in possible_paths:
+				var wem_fullpath = path + "/%s.wem" % audio_id
+				if File.new().file_exists(wem_fullpath):
+					print("loading external file %s" % wem_fullpath)
+					var wem = wemFile.new()
+					if wem.open(wem_fullpath) == OK:
+						print("playing...")
+						play_wem(item.get_text(0).get_file(), wem)
+				else:
+					continue
 		else:
 			# In this case the event has no associated audio, so do nothing (if we got here
 			# somehow...)

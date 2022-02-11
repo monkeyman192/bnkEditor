@@ -1,12 +1,10 @@
 extends Control
 
 const bnkFile = preload("res://addons/bnk_handler/BNK.gd")
-const wemFile = preload("res://addons/bnk_handler/WEM.gd")
 const bnkXmlParser = preload("res://addons/bnk_handler/META/bnk_xml.gd")
-const HIRC_ENUMS = preload("res://addons/bnk_handler/HIRC/HIRC_enums.gd")
 
 onready var tabContainer = $VBoxContainer/TabContainer
-onready var itemlist = $VBoxContainer/TabContainer/FileBrowser/FileList
+onready var fileTree = $VBoxContainer/TabContainer/FileBrowser/FileTree
 onready var fileLabel = $VBoxContainer/TabContainer/BNKExplorer/FileSelectRow
 onready var audioController = $VBoxContainer/NowPlayingBox
 onready var hircExplorer = $VBoxContainer/TabContainer/BNKExplorer/BNKTabs/HIRCExplorer
@@ -16,13 +14,6 @@ var parser = XMLParser.new()
 
 # Preload popup scenes.
 var ProgressPopup = preload("res://scenes/ProgressPopup.tscn")
-
-# Icon variables
-var play_unconverted_texture = preload("res://icons/icon_play.svg")
-var play_converted_texture = preload("res://icons/icon_play_green.svg")
-var bnk_load_texture = preload("res://icons/icon_load.svg")
-var included_audio_texture = preload("res://icons/icon_included.svg")
-var referenced_audio_texture = preload("res://icons/icon_ref.svg")
 
 # Some paths to keep track of where things go.
 const AUDIO_PERSISTENT = "NMS_AUDIO_PERSISTENT.XML"
@@ -125,42 +116,8 @@ func load_current_directory():
 	if program_settings["data_dir"] == "":
 		# Do an initial check to see if we have an empty directory or not.
 		return
-	var dir = Directory.new()
-	# Also check and see if the directory even exists. If not. Load nothing also.
-	if not dir.dir_exists(program_settings["data_dir"]):
-		return
-	dir.open(program_settings["data_dir"])
-	dir.list_dir_begin()
-	itemlist.clear()
-	var curr_idx := 0
-	# Go over the files in the folder.
-	while true:
-		var file = dir.get_next()
-		if file == "":
-			break
-		# Only list ones which are .bnks.
-		elif not file.begins_with("."):
-			if file.to_lower().ends_with(".bnk"):
-				# Add bnk's with the load icon.
-				itemlist.add_item(file, bnk_load_texture, true)
-				itemlist.set_item_tooltip(curr_idx, "Load %s in other view" % file)
-			elif file.to_lower().ends_with(".wem"):
-				# Add wem's with a play icon.
-				# If the wem has been converted already, then make the play icon green to indicate
-				# this.
-				var wem_ogg_path = is_wem_converted(file)
-				if wem_ogg_path != "":
-					itemlist.add_item(file, play_converted_texture, true)
-					itemlist.set_item_tooltip(curr_idx, "Play %s" % file)
-					itemlist.set_item_metadata(curr_idx, {"extracted_path": wem_ogg_path})
-				else:
-					itemlist.add_item(file, play_unconverted_texture, true)
-					itemlist.set_item_tooltip(curr_idx, "Convert and play %s" % file)
-					itemlist.set_item_metadata(curr_idx, {"extracted_path": ""})
-			else:
-				continue
-			curr_idx += 1
-	dir.list_dir_end()
+	
+	fileTree.load_directory(program_settings["data_dir"])
 	# Change the tab to the file list.
 	tabContainer.current_tab = 1
 
@@ -194,21 +151,16 @@ func _exit_tree():
 	thread.wait_to_finish()
 
 
-func load_bnk(filepath: String):
+func load_bnk(bnk_path: String):
 	# Load the xml associated with a bnk file and fill the audio list box with
 	# the files in it.
-	var data_dir = program_settings["data_dir"]
 	# Parse the xml associated with the bnk.
-	var bnk_xml: String = filepath.get_basename() + ".XML"
-	var bnk_path = data_dir + "/" + filepath
-	bnk_xml = data_dir + "/" + bnk_xml
-	print(bnk_xml)
-	print(bnk_path)
+	var bnk_xml: String = bnk_path.get_basename() + ".XML"
 	# Load the bnk file into memory.
 	var _bnkFile
 	if File.new().file_exists(bnk_path):
 		_bnkFile = bnkFile.new()
-		_bnkFile.open(data_dir + "/" + filepath)
+		_bnkFile.open(bnk_path)
 	else:
 		print("Cannot load %s" % bnk_path)
 		return
@@ -219,24 +171,6 @@ func load_bnk(filepath: String):
 	if File.new().file_exists(bnk_xml):
 		var atd = bnkXmlParser.new().parse_bnk_xml(bnk_xml)
 		audioTree.populate_audio_tree(atd)
-		update_file_label(filepath.get_basename() + ".BNK")
+		update_file_label(bnk_path.get_file().get_basename() + ".BNK")
 		print("Finished loading the file into the other view...")
 		tabContainer.current_tab = 0
-
-
-func _on_ItemList_item_activated(index):
-	var item: String = itemlist.get_item_text(index).to_upper()
-	print("You just pressed on the ", item, " item!")
-	if item.ends_with(".BNK"):
-		# Load the file into the bnk browser.
-		audioTree.curr_loaded_bnk = item
-		load_bnk(item)
-	elif item.ends_with(".WEM"):
-		var selected_meta = itemlist.get_item_metadata(index)
-		if selected_meta["extracted_path"] != "":
-			play_ogg_file(selected_meta["extracted_path"])
-		else:
-			var wem_fullpath = program_settings["data_dir"] + "/" + item
-			var wem = wemFile.new()
-			wem.open(wem_fullpath)
-			play_wem(item, wem)

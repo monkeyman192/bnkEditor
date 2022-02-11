@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=2]
+[gd_scene load_steps=13 format=2]
 
 [ext_resource path="res://scripts/SelectFileDialog.gd" type="Script" id=1]
 [ext_resource path="res://main.gd" type="Script" id=2]
@@ -11,6 +11,7 @@
 [ext_resource path="res://scenes/HIRCExplorer.tscn" type="PackedScene" id=9]
 [ext_resource path="res://scenes/AudioExplorer.tscn" type="PackedScene" id=10]
 [ext_resource path="res://scripts/BNKTabs.gd" type="Script" id=11]
+[ext_resource path="res://scenes/FileBrowser.tscn" type="PackedScene" id=12]
 
 [node name="main" type="Control"]
 anchor_right = 1.0
@@ -141,48 +142,12 @@ margin_top = 32.0
 margin_right = -4.0
 margin_bottom = -4.0
 
-[node name="FileBrowser" type="VBoxContainer" parent="VBoxContainer/TabContainer"]
+[node name="FileBrowser" parent="VBoxContainer/TabContainer" instance=ExtResource( 12 )]
 visible = false
-anchor_right = 1.0
-anchor_bottom = 1.0
 margin_left = 4.0
 margin_top = 32.0
 margin_right = -4.0
 margin_bottom = -4.0
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TabContainer/FileBrowser"]
-margin_right = 1016.0
-margin_bottom = 20.0
-
-[node name="FileTypeLabel" type="Label" parent="VBoxContainer/TabContainer/FileBrowser/HBoxContainer"]
-margin_top = 3.0
-margin_right = 93.0
-margin_bottom = 17.0
-text = "Filter file type:"
-
-[node name="FileTypeOptionButton" type="OptionButton" parent="VBoxContainer/TabContainer/FileBrowser/HBoxContainer"]
-margin_left = 97.0
-margin_right = 143.0
-margin_bottom = 20.0
-text = "All"
-items = [ "All", null, false, 0, null, "WEM", null, false, 1, null, "BNK", null, false, 2, null ]
-selected = 0
-
-[node name="FileList" type="ItemList" parent="VBoxContainer/TabContainer/FileBrowser"]
-margin_top = 24.0
-margin_right = 1016.0
-margin_bottom = 502.0
-size_flags_vertical = 3
-
-[node name="DetailsHBox" type="HBoxContainer" parent="VBoxContainer/TabContainer/FileBrowser"]
-margin_top = 506.0
-margin_right = 1016.0
-margin_bottom = 520.0
-
-[node name="Label" type="Label" parent="VBoxContainer/TabContainer/FileBrowser/DetailsHBox"]
-margin_right = 45.0
-margin_bottom = 14.0
-text = "Details"
 
 [node name="SelectFileDialog" type="FileDialog" parent="."]
 anchor_right = 1.0
@@ -195,6 +160,5 @@ script = ExtResource( 1 )
 [connection signal="finished" from="VBoxContainer/NowPlayingBox/AudioPlayer" to="VBoxContainer/NowPlayingBox" method="_on_AudioPlayer_finished"]
 [connection signal="toggled" from="VBoxContainer/NowPlayingBox/PlayPauseButton" to="VBoxContainer/NowPlayingBox" method="_on_PlayPauseButton_toggled"]
 [connection signal="pressed" from="VBoxContainer/NowPlayingBox/StopButton" to="VBoxContainer/NowPlayingBox" method="_on_StopButton_pressed"]
-[connection signal="item_activated" from="VBoxContainer/TabContainer/FileBrowser/FileList" to="." method="_on_ItemList_item_activated"]
 [connection signal="dir_selected" from="SelectFileDialog" to="SelectFileDialog" method="_on_SelectFileDialog_dir_selected"]
 [connection signal="file_selected" from="SelectFileDialog" to="SelectFileDialog" method="_on_SelectFileDialog_file_selected"]

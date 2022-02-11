@@ -101,6 +101,6 @@ func _on_HIRCExplorer_item_activated():
 			return
 		var ref_audio_id = meta.get("ref_audio_id")
 		if ref_audio_id != null:
-			var audio_selected: bool = audioTree.select_audio(ref_audio_id)
-			if audio_selected == true:
+			if ref_audio_id in audioTree.audio_mapping:
 				BNKTabs.change_tab("audio")
+				audioTree.select_audio(ref_audio_id)

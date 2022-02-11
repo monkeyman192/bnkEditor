@@ -75,6 +75,11 @@ _global_script_classes=[ {
 "path": "res://addons/bnk_handler/HIRC/HIRC_04_Event.gd"
 }, {
 "base": "HIRC_OBJ",
+"class": "_HIRC_11_MOTION_FX",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/HIRC/HIRC_11_MotionFX.gd"
+}, {
+"base": "HIRC_OBJ",
 "class": "_HIRC_EVENT_DUMMY",
 "language": "GDScript",
 "path": "res://addons/bnk_handler/HIRC/HIRC_00_Dummy.gd"
@@ -98,6 +103,7 @@ _global_script_class_icons={
 "_HIRC_02_SOUND_SFX": "",
 "_HIRC_03_EVENT_ACTION": "",
 "_HIRC_04_EVENT": "",
+"_HIRC_11_MOTION_FX": "",
 "_HIRC_EVENT_DUMMY": "",
 "crc": ""
 }
