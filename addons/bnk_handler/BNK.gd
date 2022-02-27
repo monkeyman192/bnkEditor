@@ -56,7 +56,6 @@ class DIDX_entry:
 
 
 class DIDX:
-	# data is an array of DIDX_entry objects
 	var id_mapping: Dictionary = {}
 
 
@@ -75,29 +74,39 @@ func get_wem(audio_id: int) -> PoolByteArray:
 	# Get the specified wem to a PoolByteArray so that it can be converted to ogg...
 	if not audio_id in self.wem_data:
 		# Extract the audio chunk from the underlying stream
-		var wem_data: DIDX_entry = self.didx.id_mapping[audio_id]
+		var _wem_data: DIDX_entry = self.didx.id_mapping[audio_id]
 		# Jump the filestream to the offset of this and then read the approriate amount of bytes.
-		self._file_stream.seek(self._data_offset + wem_data.offset)
-		self.wem_data[audio_id] = self._file_stream.get_partial_data(wem_data.file_size)[1]
+		self._file_stream.seek(self._data_offset + _wem_data.offset)
+		self.wem_data[audio_id] = self._file_stream.get_partial_data(_wem_data.file_size)[1]
 	return self.wem_data[audio_id]
-
-
-# TODO: Add 2 functions: Bulk extract and get options.
 
 
 func export_wem(audio_id: int, out_path: String, to_ogg: bool = false):
 	# Export the specified wem to a file.
 	# If `to_ogg` is true, convert to an .ogg file.
-	var wem_data: PoolByteArray = self.get_wem(audio_id)
+	var _wem_data: PoolByteArray = self.get_wem(audio_id)
+	var out_fname: String = out_path + "/%s" % audio_id
 	if to_ogg:
 		var wem = WEM.new()
-		wem.from_bytes(wem_data)
-		wem.export_to_ogg(out_path)
+		wem.from_bytes(_wem_data)
+		wem.export_to_ogg(out_fname + ".ogg")
 	else:
 		var ofile = File.new()
-		ofile.open(out_path, ofile.WRITE)
-		ofile.store_buffer(wem_data)
+		ofile.open(out_fname + ".wem", File.WRITE)
+		ofile.store_buffer(_wem_data)
 		ofile.close()
+
+
+func extract_all(out_path: String, to_ogg: bool = false):
+	# Export all contained audio files, optionionally converting to ogg.
+	for audio_id in self.didx.id_mapping.keys():
+		self.export_wem(audio_id, out_path, to_ogg)
+
+
+func extract_many(audio_ids: PoolIntArray, out_path: String, to_ogg: bool = false):
+	# Export multiple wem's from within the bnk.
+	for audio_id in audio_ids:
+		self.export_wem(audio_id, out_path, to_ogg)
 
 
 func open(path: String, preload_data: bool = false) -> bool:
@@ -113,7 +122,7 @@ func open(path: String, preload_data: bool = false) -> bool:
 	# necessary... We shall see...)
 	var f = File.new()
 
-	if f.open(path, f.READ) != OK:
+	if f.open(path, File.READ) != OK:
 		return false
 	self._file_stream = StreamPeerBuffer.new()
 	var bnk_length = f.get_len()
@@ -203,10 +212,10 @@ func _read_data():
 	# Read the entire data chunk and chunk it up into individual BytePoolArrays with an associated
 	# audio id, for easy lookup.
 	for audio_id in self.didx.id_mapping.keys():
-		var wem_data: DIDX_entry = self.didx.id_mapping[audio_id]
+		var _wem_data: DIDX_entry = self.didx.id_mapping[audio_id]
 		# Jump the filestream to the offset of this and then read the approriate amount of bytes.
-		self._file_stream.seek(self._data_offset + wem_data.offset)
-		self.wem_data[audio_id] = self._file_stream.get_partial_data(wem_data.file_size)[1]
+		self._file_stream.seek(self._data_offset + _wem_data.offset)
+		self.wem_data[audio_id] = self._file_stream.get_partial_data(_wem_data.file_size)[1]
 
 
 func _read_hirc():

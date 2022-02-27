@@ -19,10 +19,9 @@ var ProgressPopup = preload("res://scenes/ProgressPopup.tscn")
 const AUDIO_PERSISTENT = "NMS_AUDIO_PERSISTENT.XML"
 # Save user settings
 const SETTINGS_FILE = "user://settings/settings.json"
-const PCB = "packed_codebooks_aoTuV_603.bin"
 
 # A spearate thread to do stuff in.
-var thread = Thread.new()
+var thread: Thread
 
 
 # Dictionary to keep track of all the settings. This will be written when a setting is changed,
@@ -53,7 +52,6 @@ func load_settings():
 			print("Error: %s" % json_parsed.error_string)
 		else:
 			program_settings = json_parsed.result
-	audioExplorer.export_path = program_settings["export_path"]
 	audioTree.program_settings = program_settings
 
 
@@ -141,7 +139,7 @@ func update_file_label(filename: String):
 func _ready():
 	# First, load the settings.
 	load_settings()
-
+	thread = Thread.new()
 	# Start the directory load in a separate thread to avoid locking the UI.
 	thread.start(self, "load_current_directory")
 
@@ -165,8 +163,8 @@ func load_bnk(bnk_path: String):
 		print("Cannot load %s" % bnk_path)
 		return
 	print("About to put %s HIRC values in the tree..." % _bnkFile.hirc.data.size())
+	print("This bnk has %s embedded wem files" % _bnkFile.didx.id_mapping.keys().size())
 	hircExplorer.load_HIRC_data(_bnkFile.hirc.data)
-	audioExplorer._bnkFile = _bnkFile
 	audioTree._bnkFile = _bnkFile
 	# Load the bnk xml into the tree.
 	if File.new().file_exists(bnk_xml):

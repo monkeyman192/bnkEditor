@@ -68,12 +68,12 @@ const SEGMENT_SIZE = 0xFF			# 255 (bytes)
 const NOMINAL_MAX_PAGE_SIZE = 0xFFF	# 4095 (bytes)
 
 var codebookCount: int
+const PCB = "res://packed_codebooks_aoTuV_603.bin"
 
 
 func open(path: String) -> int:
 	# Load a .wem file from disk into memory.
 	var f = File.new()
-	print("opening %s" % path)
 	var err: int = f.open(path, f.READ)
 	if err != OK:
 		print("There was an error: %s" % err)
@@ -454,7 +454,7 @@ func _write_vorbis_setup_header(fullSetup: bool):
 
 	# For now, we will assume only an external codebook.
 	var codebook: Codebook = Codebook.new()
-	codebook.open("packed_codebooks_aoTuV_603.bin")
+	codebook.open(PCB)
 	for i in range(self.codebookCount):
 		var codebookID = self.get_bits(10)
 		codebook.rebuild(codebookID, self.page_buffer)
