@@ -167,9 +167,10 @@ func load_bnk(bnk_path: String):
 	print("About to put %s HIRC values in the tree..." % _bnkFile.hirc.data.size())
 	hircExplorer.load_HIRC_data(_bnkFile.hirc.data)
 	audioExplorer._bnkFile = _bnkFile
+	audioTree._bnkFile = _bnkFile
 	# Load the bnk xml into the tree.
 	if File.new().file_exists(bnk_xml):
-		var atd = bnkXmlParser.new().parse_bnk_xml(bnk_xml)
+		var atd: Dictionary = bnkXmlParser.new().parse_bnk_xml(bnk_xml)
 		audioTree.populate_audio_tree(atd)
 		update_file_label(bnk_path.get_file().get_basename() + ".BNK")
 		print("Finished loading the file into the other view...")

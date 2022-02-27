@@ -34,7 +34,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/bnk_handler/Codebook.gd"
 }, {
-"base": "Node",
+"base": "Reference",
 "class": "HIRC_OBJ",
 "language": "GDScript",
 "path": "res://addons/bnk_handler/HIRC/HIRC.gd"
@@ -49,7 +49,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/bnk_handler/Packet.gd"
 }, {
-"base": "Node",
+"base": "Reference",
 "class": "Utils",
 "language": "GDScript",
 "path": "res://addons/bnk_handler/utils.gd"

@@ -1,4 +1,4 @@
-extends Node
+extends Reference
 
 # Create an abstract base class
 class_name HIRC_OBJ

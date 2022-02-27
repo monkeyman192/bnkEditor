@@ -31,9 +31,9 @@ func parse_bnk_xml(filepath: String) -> Dictionary:
 			if _in_event:
 				if parser.get_node_name() == "File":
 					current_id = int(parser.get_named_attribute_value_safe("Id"))
-				elif parser.get_node_name() == "ReferencedStreamedFiles":
+				elif parser.get_node_name().to_lower().begins_with("referenced"):
 					audio_type = AUDIO_TYPE.REFERENCED
-				elif parser.get_node_name() == "IncludedEvents":
+				elif parser.get_node_name().to_lower().begins_with("included"):
 					audio_type = AUDIO_TYPE.INCLUDED
 			else:
 				current_id = null

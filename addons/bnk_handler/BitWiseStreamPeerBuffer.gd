@@ -47,6 +47,40 @@ func put_bits(value: int, count: int):
 		self._put_bit(int(value & (1 << i) != 0))
 
 
+func put_array(arr: Array):
+	# Write the entire contents of an array.
+	# If the current alignment is 0 then we can simply write the data without having to write
+	# bit-by bit.
+	if arr.size() == 0:
+		# If the input array is empty, do nothing.
+		return
+	if self._bits_written == 0:
+		self.put_data(arr)
+	else:
+		# In this case, let's try and be smart.
+		# I am going to assume the constant IO is what is causing a bottle neck, and instead do
+		# some logic to essentially split the array up into some initial bit to write, a whole
+		# contigous chunk which can be written in one go, and then a few more bits.
+		var chunk_array = []
+		var _byte_count = arr.size()
+		var orig_bits_written = self._bits_written
+		var orig_bits_remaining = 8 - orig_bits_written
+		var mask = (2 << (8 - orig_bits_written - 1)) - 1
+		for i in range(_byte_count):
+			if i == 0:
+				chunk_array.append(arr[0] & mask)
+			if i != _byte_count - 1:
+				var end = arr[i] >> orig_bits_remaining
+				var start = arr[i + 1] & mask
+				chunk_array.append((start << orig_bits_written) + end)
+			else:
+				chunk_array.append(arr[i] >> orig_bits_remaining)
+		# Now that we have the data, write appropriately.
+		self.put_bits(chunk_array[0], 8 - orig_bits_written)
+		self.put_data(chunk_array.slice(1, chunk_array.size() - 1))
+		self.put_bits(chunk_array[-1], orig_bits_written)
+
+
 func _flush_bits():
 	# Flush the current bit buffer to the underlying stream.
 	# if there are no bytes written to it, don't bother.

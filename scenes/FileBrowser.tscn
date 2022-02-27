@@ -44,4 +44,5 @@ margin_right = 45.0
 margin_bottom = 14.0
 text = "Details"
 
+[connection signal="item_selected" from="HBoxContainer/FileTypeOptionButton" to="FileTree" method="_on_FileTypeOptionButton_item_selected"]
 [connection signal="item_activated" from="FileTree" to="FileTree" method="_on_FileTree_item_activated"]

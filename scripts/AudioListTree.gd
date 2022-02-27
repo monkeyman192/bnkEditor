@@ -97,10 +97,8 @@ func _on_AudioListTree_button_pressed(item: TreeItem, column: int, id: int):
 			for path in possible_paths:
 				var wem_fullpath = path + "/%s.wem" % audio_id
 				if File.new().file_exists(wem_fullpath):
-					print("loading external file %s" % wem_fullpath)
 					var wem = wemFile.new()
 					if wem.open(wem_fullpath) == OK:
-						print("playing...")
 						play_wem(item.get_text(0).get_file(), wem)
 				else:
 					continue

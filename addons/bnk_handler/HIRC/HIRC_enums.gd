@@ -1,4 +1,4 @@
-extends Node
+extends Reference
 
 enum HIRC_OBJ_TYPES {
 	_00_DUMMY,

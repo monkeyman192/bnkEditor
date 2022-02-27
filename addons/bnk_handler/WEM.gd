@@ -717,7 +717,7 @@ func _write_audio_pages():
 			remainder = self.get_bits(8 - self.mode_bits)
 
 			if self.mode_block_flag[mode_number] != 0:
-				blocksize = int(pow(2, self.blockSize1Pow))
+				blocksize = (1 << self.blockSize1Pow)
 				self.cseek(next_offset)
 				var next_block_flag: int = 0  # bool, but we'll use int for simplicity.
 				if next_offset + packet_header_size <= self._data_chunk_offset + self._data_chunk_size:
@@ -737,14 +737,14 @@ func _write_audio_pages():
 				# Go to the next bit to continue reading.
 				self.cseek(offset + 1)
 			else:
-				blocksize = int(pow(2, self.blockSize0Pow))
+				blocksize = (1 << self.blockSize0Pow)
 			prev_block_flag = self.mode_block_flag[mode_number]
 			self.segment_buffer.put_bits(remainder, 8 - self.mode_bits)
 		else:
 			self.segment_buffer.put_bits(self.get_u8(), 8)
 		# The rest of the payload is copied as usual.
-		for i in range(size - 1):
-			self.segment_buffer.put_bits(self.get_u8(), 8)
+		var _data = self.get_partial_data(size - 1)[1]
+		self.segment_buffer.put_array(_data)
 		offset = next_offset
 		self.flush_page(false, offset == self._data_chunk_offset + self._data_chunk_size, true,
 						blocksize)
