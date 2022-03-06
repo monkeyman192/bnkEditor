@@ -50,6 +50,11 @@ _global_script_classes=[ {
 "path": "res://addons/bnk_handler/Packet.gd"
 }, {
 "base": "Reference",
+"class": "SoundStructure",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/HIRC/HIRC_sound_structure.gd"
+}, {
+"base": "Reference",
 "class": "Utils",
 "language": "GDScript",
 "path": "res://addons/bnk_handler/utils.gd"
@@ -98,6 +103,7 @@ _global_script_class_icons={
 "HIRC_OBJ": "",
 "OGG": "",
 "Packet": "",
+"SoundStructure": "",
 "Utils": "",
 "WEM": "",
 "_HIRC_02_SOUND_SFX": "",

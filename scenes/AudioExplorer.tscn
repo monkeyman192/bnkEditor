@@ -84,9 +84,9 @@ text = "Cancel"
 
 [node name="FilterByRow" type="HBoxContainer" parent="."]
 visible = false
-margin_top = 24.0
+margin_top = 28.0
 margin_right = 1024.0
-margin_bottom = 48.0
+margin_bottom = 52.0
 size_flags_horizontal = 3
 alignment = 1
 
@@ -126,3 +126,4 @@ __meta__ = {
 [connection signal="pressed" from="ExtractRow/CancelButton" to="ExtractRow" method="_on_CancelButton_pressed"]
 [connection signal="text_entered" from="FilterByRow/filterField" to="." method="_on_filterField_text_entered"]
 [connection signal="button_pressed" from="AudioListTree" to="AudioListTree" method="_on_AudioListTree_button_pressed"]
+[connection signal="item_activated" from="AudioListTree" to="AudioListTree" method="_on_AudioListTree_item_activated"]

@@ -1,24 +1,25 @@
 # TODO:
-### File explorer:
-- [x] Allow the files to be selected from the file explorer
-- [x] Only show .bnk files (?)
-- [ ] When a file is selected the contents should be read so that the included and streamed files are displayed.
 
-### BNK view:
-- [ ] Have a split view for both streamed and included files.
-- [x] Show the name of the file loaded at the top.
-- [ ] Have option to extract included file.
-- [ ] Have option to play either streamed or extracted files (included to be extracted as required.)
-- [ ] Add icons for a few things:
-	- [ ] Extracted (WEM).
-	- [ ] Converted (wem -> ogg)
+### UI
 
-### Audio player:
-- [x] Add an audio player somewhere (bottom, top?)
-- [x] Have `stop`, `play` and `pause` buttons.
-- [x] Show name of playing audio file.
-- [x] Show progress and info such as total play time.
+- [x] Add a "back-reference" between an audio in the Audio Explorer and the associated Sound FX.
+- [ ] Re-implement the search functionality in the Audio Explorer
 
-### Popups:
-- [ ] Add a popup for processing .bnk files from the file explorer to the bnk viewer.
-- [ ] Add a popup when doing bulk extraction or conversion to show the process.
+### Recompiling BNK's
+
+When recompiling the BNK we will need to consider any changes.
+
+**Options:**
+
+For Audio:
+- *Replace* the audio file.
+	-> This will not require much other than simply updating the DIDX section.
+- *Add* audio file.
+	-> This will require some stuff in the HIRC section. May need to merge some data in from another bnk??
+	-> If there is no other bnk, we can probably provide a default value.
+- *Delete* audio file.
+	-> Will require going over the HIRC section and deleting any relevant chunks.
+	
+For HIRC:
+- *Update* values
+	-> Simply need to write the updated HIRC chunk with the rest of the bnk back in.

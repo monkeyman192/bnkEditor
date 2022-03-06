@@ -1,0 +1,12 @@
+- `uint8` - HIRC Identifier
+- `uint32` - HIRC section length
+- `uint32` - HIRC section ID
+- `byte[4]` - Unknown
+- `uint8` - Stream Type (Embedded or not)
+	- *0x00* - Embedded
+	- *0x01* - Streamed
+	- *0x02* - Streamed (sound data prefetched)
+- `uint32` - Audio file ID
+- `uint32` - Audio file size in bytes
+- `uint8` - Some extra info (the individual bits have meaning...)
+- [[Sound Structure]]

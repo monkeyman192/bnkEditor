@@ -12,11 +12,13 @@ const HIRC_ENUMS = preload("res://addons/bnk_handler/HIRC/HIRC_enums.gd")
 
 onready var audioController = get_tree().get_root().get_node("main/VBoxContainer/NowPlayingBox")
 onready var extractionRow = get_node("../ExtractRow")
+onready var HIRCTree = get_node("../../HIRCExplorer")
+onready var BNKTabs = get_node("../..")
 
 enum EXTRACTION_MODE {SELECTED, ALL}
 
-var audio_tree_data = Dictionary()
-var audio_mapping = Dictionary()
+var audio_tree_data: Dictionary = {}
+var audio_mapping: Dictionary = {}
 var bnk_fullpath: String = ""
 var _bnkFile
 var root: TreeItem
@@ -118,13 +120,13 @@ func get_contained_audio(method: int) -> Dictionary:
 			var children = self.get_all_children(curr_selected)
 			for child in children:
 				meta = child.get_metadata(0)
-				audio_id = meta["id"]
+				audio_id = meta["audio_id"]
 				audio_loc = meta["location"]
 				if not audio_id in data[audio_loc]:
 					data[audio_loc].append(audio_id)
 			curr_selected = self.get_next_selected(curr_selected)
 			continue
-		audio_id = meta["id"]
+		audio_id = meta["audio_id"]
 		audio_loc = meta["location"]
 		if not audio_id in data[audio_loc]:
 			data[audio_loc].append(audio_id)
@@ -175,7 +177,7 @@ func populate_audio_tree(data: Dictionary):
 			var sub_child: TreeItem = self.create_item(current_child)
 			sub_child.set_text(0, v[0])
 			sub_child.set_tooltip(0, "ID: %s" % v[1])
-			sub_child.set_metadata(0, {"id": v[1], "location": v[2]})
+			sub_child.set_metadata(0, {"audio_id": v[1], "location": v[2]})
 			sub_child.add_button(0, play_unconverted_texture, -1, false, "PLAY")
 			if v[2] == bnkXmlParser.AUDIO_TYPE.INCLUDED:
 				sub_child.set_icon(0, included_audio_texture)
@@ -188,7 +190,7 @@ func _on_AudioListTree_button_pressed(item: TreeItem, column: int, id: int):
 	if id == 0:
 		# Play button has id 0.
 		var meta: Dictionary = item.get_metadata(column)
-		var audio_id = meta["id"]
+		var audio_id = meta["audio_id"]
 		var audio_loc = meta["location"]
 		if audio_loc == bnkXmlParser.AUDIO_TYPE.INCLUDED:
 			var wem_data: PoolByteArray = _bnkFile.get_wem(int(audio_id))
@@ -222,3 +224,15 @@ func get_audio_path(audio_id: int) -> String:
 			return wem_fullpath
 	# If we got here and the audio file wasn't found, then return an empty string.
 	return ""
+
+
+func _on_AudioListTree_item_activated():
+	# When we double click on an item, if we can find an associated sound sfx swap to it.
+	var selected_item: TreeItem = self.get_selected()
+	var meta = selected_item.get_metadata(0)
+	if meta != null:
+		var audio_id = meta.get("audio_id")
+		if audio_id != null:
+			if audio_id in HIRCTree.audio_mapping:
+				BNKTabs.change_tab("hirc")
+				HIRCTree.select_sfx(audio_id)

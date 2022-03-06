@@ -22,6 +22,27 @@ enum HIRC_OBJ_TYPES {
 }
 # TODO: There are more, but let's ignore them for now...
 
+enum SOUND_OBJ_ADDITIONAL_PARAMS {
+    VOLUME = 0x00,
+    LFE = 0x01,
+    PITCH = 0x02,
+    LPF = 0x03,            # Low-pass filter
+    HPF = 0x04,            # High-pass filter
+    BUS_VOLUME = 0x05,
+    MAKEUP_GAIN = 0x06,
+    PRIORITY = 0x07,
+    PRIORITY_DISTANCE_OFFSET = 0x08,
+    MUTE_RATIO = 0x0B,
+    PAN_LR = 0x0C,
+    PAN_FR = 0x0D,
+    CENTER_PCT = 0x0E,
+    DELAY_TIME = 0x0F,
+    TRANSITION_TIME = 0x10,
+    PROBABILITY = 0x11,
+    DIALOGUE_MODE = 0x12,
+
+}
+
 enum HIRC_02_INC_OR_STREAMED {EMBEDDED, STREAMED, STREAMED_PREFETCH}
 enum HIRC_02_SOUND_OBJ_TYPE {SOUND_SFX, SOUND_VOICE}
 
