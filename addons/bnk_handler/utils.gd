@@ -61,6 +61,18 @@ static func back_enum(_enum, value) -> String:
 		return ""
 
 
+static func stringify_enum(_enum) -> String:
+	var out_string: String = ""
+	var _arr: Array = []
+	for k in _enum.keys():
+		_arr.append([k, _enum[k]])
+	for d in _arr:
+		out_string += "%s:%s," % d
+	# Then trim the trailing comma.
+	out_string = out_string.trim_suffix(",")
+	return out_string
+
+
 static func fnv_hash(obj_name: String) -> int:
 	# Calculate the 32 bit FNV-1 hash.
 	# The source for the constants is found here:

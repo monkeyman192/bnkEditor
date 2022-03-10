@@ -12,4 +12,6 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[connection signal="button_pressed" from="." to="." method="_on_HIRCExplorer_button_pressed"]
 [connection signal="item_activated" from="." to="." method="_on_HIRCExplorer_item_activated"]
+[connection signal="item_edited" from="." to="." method="_on_HIRCExplorer_item_edited"]

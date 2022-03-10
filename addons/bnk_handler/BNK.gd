@@ -34,6 +34,10 @@ var audio_ids: Array = [] setget ,_get_audio_ids
 # Keep track of what wems we have extracted.
 # Once we have extracted it once it will be stored here and we can immediately pull it out.
 var wem_data: Dictionary
+# Keep a count of the number of modified HIRC segments. If this is 0 then we can just write the
+# original HIRC chunk back as it was.
+# TODO: Maybe this will be a list. For now will be a count.
+var modified_hirc_chunks: int
 
 
 # Create a mapping between the hirc types and the objects used to load the data.
@@ -49,6 +53,9 @@ class BKHD:
 	var sound_bank_id: int
 	var unknown: PoolByteArray
 
+	func size() -> int:
+		return 8 + self.unknown.size()
+
 
 class DIDX_entry:
 	var offset: int
@@ -58,10 +65,26 @@ class DIDX_entry:
 class DIDX:
 	var id_mapping: Dictionary = {}
 
+	func size() -> int:
+		return 0xC * self.id_mapping.size()
+
 
 class HIRC:
 	var object_count: int
 	var data: Array = []
+
+	func persist_changes():
+		# For every HIRC object with changes, persist them to the underlying PoolByteArray so that
+		# the size calculation is correct.
+		for obj in data:
+			obj.persist_changes()
+
+	func size() -> int:
+		# Return the total size of the HIRC section. We start with 4 (the size of the count).
+		var _size = 4
+		for chunk in data:
+			_size += chunk.size
+		return _size
 
 
 class STID:
@@ -134,6 +157,24 @@ func open(path: String, preload_data: bool = false) -> bool:
 	return true
 
 
+func write(path: String) -> int:
+	# Write the bnk file back to disk, including any changes that have been made to it.
+	var f = File.new()
+	var _f_res = f.open(path, File.WRITE)
+	if _f_res != OK:
+		return _f_res
+	# Create a stream buffer for the output.
+	var fs = StreamPeerBuffer.new()
+	fs.big_endian = false
+	self._write_bkhd(fs)
+	self._write_didx(fs)
+	self._write_data(fs)
+	self._write_hirc(fs)
+	f.store_buffer(fs.data_array)
+	print("Wrote bnk to %s" % path)
+	return OK
+
+
 func _read_file(bnk_length: int, preload_data: bool = false):
 	# First port of call for reading the file.
 	# The structure is very simple. We'll read 4 bytes as a string and 4 bytes for its size,
@@ -189,6 +230,14 @@ func _read_bkhd():
 	self.bkhd.unknown = self._file_stream.get_partial_data(self._bkhd_size - 8)[1]
 
 
+func _write_bkhd(buffer: StreamPeerBuffer):
+	buffer.put_data([0x42, 0x4B, 0x48, 0x44])  # BKHD
+	buffer.put_u32(self.bkhd.size())
+	buffer.put_u32(self.bkhd.version)
+	buffer.put_u32(self.bkhd.sound_bank_id)
+	buffer.put_partial_data(self.bkhd.unknown)
+
+
 func _read_didx():
 	# Read the DIDX chunk of the BNK file.
 	for i in range(self._didx_size / 0xC):
@@ -198,6 +247,30 @@ func _read_didx():
 		# we can easily find and extract data from the data chunk.
 		var didx_entry: DIDX_entry = _read_didx_entry()
 		self.didx.id_mapping[audio_id] = didx_entry
+
+
+func _write_didx(buffer: StreamPeerBuffer):
+	buffer.put_data([0x44, 0x49, 0x44, 0x58])  # DIDX
+	buffer.put_u32(self.didx.size())
+	# Get the list of audio ids. Because we can't guarantee that godot will return them in the
+	# correct order, manually order them (increasing value)
+	var audio_ids = self.didx.id_mapping.keys()
+	audio_ids.sort()
+
+	# We need to keep track of the actual location the audio will get written to.
+	# WEM files can be any number of bytes, but each will be written to a location with an
+	# alignment of 4 relative to the DATA section.
+	var offset = 0
+
+	for audio_id in audio_ids:
+		var entry: DIDX_entry = self.didx.id_mapping[audio_id]
+		buffer.put_u32(audio_id)
+		buffer.put_u32(offset)
+		buffer.put_u32(entry.file_size)
+
+		# Now, update the offset so that the next file will have the correct offset.
+		offset += entry.offset
+		offset += 4 - (offset % 4)
 
 
 func _read_didx_entry() -> DIDX_entry:
@@ -218,6 +291,19 @@ func _read_data():
 		self.wem_data[audio_id] = self._file_stream.get_partial_data(_wem_data.file_size)[1]
 
 
+func _write_data(buffer: StreamPeerBuffer):
+	buffer.put_data([0x44, 0x41, 0x54, 0x41])
+	# Before we write anything, we need to determine if anything has changed. If nothing has then
+	# we can just write the entire data chunk from the original bank file by reading the whole
+	# chunk from one buffer to another.
+	if self.wem_data.size() == 0:
+		buffer.put_u32(self._data_size)
+		self._file_stream.seek(self._data_offset)
+		buffer.put_partial_data(self._file_stream.get_partial_data(self._data_size)[1])
+	else:
+		print("NOT SUPPORTED YET!")
+
+
 func _read_hirc():
 	self.hirc.object_count = self._file_stream.get_u32()
 	for i in range(self.hirc.object_count):
@@ -225,13 +311,30 @@ func _read_hirc():
 		var entry_size: int = self._file_stream.get_u32()
 		var data: PoolByteArray = self._file_stream.get_partial_data(entry_size)[1]
 		var entry_obj
+		# TODO: Implement this like a defaultdict in python...
 		if entry_type in HIRC_MAPPING.keys():
 			entry_obj = HIRC_MAPPING[entry_type].new()
-			entry_obj.load(data)
+			entry_obj.load(entry_type, data)
 		else:
 			entry_obj = _HIRC_EVENT_DUMMY.new()
-			entry_obj.load_dummy(entry_type, entry_size, data)
+			entry_obj.load(entry_type, data)
 		self.hirc.data.append(entry_obj)
+
+
+func _write_hirc(buffer: StreamPeerBuffer):
+	buffer.put_data([0x48, 0x49, 0x52, 0x43])
+	# Determine whether the HIRC chunk has any changes. If it doesn't then we just write the entire
+	# original chunk.
+	if self.modified_hirc_chunks == 0:
+		buffer.put_u32(self._hirc_size)
+		self._file_stream.seek(self._hirc_offset)
+		buffer.put_partial_data(self._file_stream.get_partial_data(self._hirc_size)[1])
+	else:
+		self.hirc.persist_changes()
+		buffer.put_u32(self.hirc.size())
+		buffer.put_u32(self.hirc.object_count)
+		for obj in self.hirc.data:
+			buffer.put_partial_data(obj.byte_pool())
 
 
 func _read_stid():

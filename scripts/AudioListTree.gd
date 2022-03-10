@@ -49,14 +49,14 @@ func extract(method: int = EXTRACTION_MODE.SELECTED, to_ogg: bool = false):
 		selected_audio_data[bnkXmlParser.AUDIO_TYPE.INCLUDED].size()
 		+ selected_audio_data[bnkXmlParser.AUDIO_TYPE.REFERENCED].size()
 	)
-	var export_path: String = program_settings["export_path"]
+	var export_path: String = self.program_settings["export_path"]
 
 	# For the included audios, we extract them from within the bnk.
 	for audio_id in selected_audio_data[bnkXmlParser.AUDIO_TYPE.INCLUDED]:
 		if extractionRow.extraction_state == extractionRow.STATE.CANCELLED:
 			# Check to see if the extraction row has been cancelled.
 			break
-		_bnkFile.export_wem(audio_id, export_path, to_ogg)
+		self._bnkFile.export_wem(audio_id, export_path, to_ogg)
 		extractionRow.curr_processing_file += 1
 
 	# For the referenced ones, we'll simply copy them over (or convert if exporting to ogg.)
@@ -193,7 +193,7 @@ func _on_AudioListTree_button_pressed(item: TreeItem, column: int, id: int):
 		var audio_id = meta["audio_id"]
 		var audio_loc = meta["location"]
 		if audio_loc == bnkXmlParser.AUDIO_TYPE.INCLUDED:
-			var wem_data: PoolByteArray = _bnkFile.get_wem(int(audio_id))
+			var wem_data: PoolByteArray = self._bnkFile.get_wem(int(audio_id))
 			var wem = wemFile.new()
 			wem.from_bytes(wem_data)
 			play_wem("%s.wem" % audio_id, wem)
@@ -215,8 +215,8 @@ func get_audio_path(audio_id: int) -> String:
 	# This will search through the possible paths we could expect the audio to be and return the
 	# first path it is found to exist at.
 	var possible_paths = Utils.filepath_iter(
-				program_settings["data_dir"],
-				bnk_fullpath.get_base_dir()
+				self.program_settings["data_dir"],
+				self.bnk_fullpath.get_base_dir()
 			)
 	for path in possible_paths:
 		var wem_fullpath: String = path + "/%s.wem" % audio_id
@@ -236,3 +236,7 @@ func _on_AudioListTree_item_activated():
 			if audio_id in HIRCTree.audio_mapping:
 				BNKTabs.change_tab("hirc")
 				HIRCTree.select_sfx(audio_id)
+
+
+func _on_ExportButton_pressed():
+	self._bnkFile.write(self.bnk_fullpath + ".MODIFIED")

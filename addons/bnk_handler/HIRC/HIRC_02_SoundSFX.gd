@@ -15,7 +15,9 @@ var embedded_size: int
 var sound_structure: SoundStructure
 
 
-func _load(buffer: StreamPeerBuffer):
+func _load(data: PoolByteArray):
+	var buffer: StreamPeerBuffer = StreamPeerBuffer.new()
+	buffer.set_data_array(data)
 	self.id = buffer.get_u32()
 	buffer.seek(buffer.get_position() + 4)
 	self._inc_or_streamed = buffer.get_u8()
@@ -36,3 +38,9 @@ func _to_string() -> String:
 	out_str += "> audio id: %s\n" % self.audio_id
 	out_str += "> audio location: %s" % self.inc_or_streamed
 	return out_str
+
+
+func _persist_changes():
+	var buffer = StreamPeerBuffer.new()
+	buffer.set_data_array(self._byte_pool)
+	self._byte_pool = buffer.data_array

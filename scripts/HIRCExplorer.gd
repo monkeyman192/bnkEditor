@@ -11,6 +11,13 @@ onready var audioTree = get_node("../AudioExplorer/AudioListTree")
 
 const included_audio_texture = preload("res://icons/icon_included.svg")
 const referenced_audio_texture = preload("res://icons/icon_ref.svg")
+const edit_texture = preload("res://icons/icon_edit.svg")
+const reload_texture = preload("res://icons/icon_reload.svg")
+
+var ACTION_TYPES: String = Utils.stringify_enum(HIRC_ENUMS.HIRC_03_ACTION_TYPE)
+
+enum BUTTON_ENUM {RELOAD}
+
 
 func _ready():
 	pass
@@ -54,6 +61,20 @@ func update_metadata(item: TreeItem, column: int, meta: Dictionary):
 	var curr_meta = item.get_metadata(column)
 	for key in meta:
 		curr_meta[key] = meta[key]
+
+
+func get_parent_hric_obj(item: TreeItem) -> TreeItem:
+	# Return the parent object of the given on that contains the reference to the actual hirc
+	# object so that we may edit it.
+	var parent = item.get_parent()
+	while parent != null:
+		var meta = parent.get_metadata(0)
+		if meta != null:
+			if "_data" in meta:
+				return parent
+		# If this parent didn't have it, go up another level.
+		parent = parent.get_parent()
+	return null
 
 
 func load_HIRC_data(data: Array):
@@ -107,6 +128,7 @@ func process_hirc_02(data: _HIRC_02_SOUND_SFX, treeItem: TreeItem):
 			_param.set_text(0, "%s" % Utils.back_enum(HIRC_ENUMS.SOUND_OBJ_ADDITIONAL_PARAMS, d[0]))
 			_param.set_text(1, "%s" % d[1])
 			_param.set_editable(1, true)
+			_param.set_metadata(1, {"_edited" : false, "_orig_value": d[1], "_ref": d})
 			if d[0] == HIRC_ENUMS.SOUND_OBJ_ADDITIONAL_PARAMS.VOLUME:
 				_param.set_suffix(1, "db")
 
@@ -118,12 +140,22 @@ func process_hirc_03(data: _HIRC_03_EVENT_ACTION, treeItem: TreeItem):
 	_scope.set_text(1, "%s" % data.scope)
 	var _action_type: TreeItem = self.create_item(treeItem)
 	_action_type.set_text(0, "Action Type:")
-	_action_type.set_text(1, "%s" % data.action_type)
+	_action_type.set_cell_mode(1, TreeItem.CELL_MODE_RANGE)
+	_action_type.set_editable(1, true)
+	# Set the tooltip as a single space to not show it.
+	_action_type.set_tooltip(1, " ")
+	_action_type.set_text(1, ACTION_TYPES)
+	_action_type.set_range(1, data.action_type)
+	_action_type.set_metadata(1,
+		{"_edited" : false, "_orig_value": data.action_type, "_ref": data._action_type,
+		 "_is_enum": true}
+	)
 	for param in data.additional_parameters:
 		var _param: TreeItem = self.create_item(treeItem)
 		_param.set_text(0, "%s" % Utils.back_enum(HIRC_ENUMS.HIRC_03_PARAMETER_TYPE, param[0]))
 		_param.set_text(1, "%s" % param[1])
 		_param.set_editable(1, true)
+		_param.set_metadata(1, {"_edited" : false, "_orig_value": param[1], "_ref": param})
 		if param[0] != HIRC_ENUMS.HIRC_03_PARAMETER_TYPE.PROBABILITY:
 			_param.set_suffix(1, "ms")
 
@@ -152,3 +184,97 @@ func _on_HIRCExplorer_item_activated():
 			if ref_audio_id in audioTree.audio_mapping:
 				BNKTabs.change_tab("audio")
 				audioTree.select_audio(ref_audio_id)
+
+
+func _on_HIRCExplorer_item_edited():
+	# When something is edited, we need to do a few things:
+	# 1. Add the "refresh" button to the edited row so that we can reset the value back to what it
+	# was originally.
+	# 2. Update the icon for the parent hirc obj so that we can see that it was edited.
+	# 3. Update the hirc edited count in the associated bnk file.
+	var edited = self.get_edited()
+	var meta = edited.get_metadata(1)
+	var orig_value = meta.get("_orig_value")
+	# Track whether the value changes
+	var val_changed: bool = false
+	# Track whether the value is different from the original
+	var val_differs: bool = false
+	# For now, assume all values will be floats. This will change once we allow enums, but fine
+	# for the moment.
+	var new_value = float(edited.get_text(1))
+	if new_value != orig_value:
+		if not meta.get("_edited"):
+			# Only try and add the button if the field was not already edited.
+			edited.add_button(1, reload_texture, BUTTON_ENUM.RELOAD, false, "Revert to original")
+			val_changed = true
+		update_metadata(edited, 1, {"_edited": true})
+		var _ref = meta["_ref"]
+		if typeof(_ref) == TYPE_ARRAY:
+			_ref[1] = new_value
+		else:
+			# For now the only other option is that the reference is a dictionary.
+			_ref["value"] = new_value
+			print(_ref)
+		val_differs = true
+	else:
+		if meta.get("_edited"):
+			edited.erase_button(1, BUTTON_ENUM.RELOAD)
+			update_metadata(edited, 1, {"_edited": false})
+			val_changed = true
+		val_differs = false
+
+	# If the value actually changed, then write it to the underlying HIRC object and update the
+	# parent tree item which needs the icon.
+	if val_changed:
+		var hirc_parent = self.get_parent_hric_obj(edited)
+		var parent_meta = hirc_parent.get_metadata(0)
+		var hirc_obj = parent_meta["_data"]
+		# Get the change count so we may modify it directly.
+		var _change_count = hirc_obj.change_count
+		if val_differs:
+			_change_count += 1
+			audioTree._bnkFile.modified_hirc_chunks += 1
+		else:
+			_change_count -= 1
+			audioTree._bnkFile.modified_hirc_chunks -= 1
+		# Check to see what the edit count is and update the parent icon appropriately.
+		hirc_obj.change_count = _change_count
+		if _change_count != 0:
+			hirc_parent.set_icon(1, edit_texture)
+		else:
+			hirc_parent.set_icon(1, null)
+		print(audioTree._bnkFile.modified_hirc_chunks)
+
+
+func _on_HIRCExplorer_button_pressed(item: TreeItem, column: int, id: int):
+	if column == 1 && id == BUTTON_ENUM.RELOAD:
+		# The reload button will reset the value in the row back to its original value.
+		var meta = item.get_metadata(1)
+		var orig_value = meta.get("_orig_value")
+		if meta.get("_is_enum", false):
+			# Enum fields we want to reset the range, not text
+			item.set_range(1, orig_value)
+		else:
+			item.set_text(1, "%s" % orig_value)
+		update_metadata(item, 1, {"_edited": false})
+		item.erase_button(1, BUTTON_ENUM.RELOAD)
+
+		# Change the value in the reference back to what it was originally.
+		var _ref = meta["_ref"]
+		if typeof(_ref) == TYPE_ARRAY:
+			_ref[1] = orig_value
+		else:
+			# For now the only other option is that the reference is a dictionary.
+			_ref["value"] = orig_value
+
+		# We also need to update the parent.
+		var hirc_parent = self.get_parent_hric_obj(item)
+		var parent_meta = hirc_parent.get_metadata(0)
+		var hirc_obj = parent_meta["_data"]
+		hirc_obj.change_count -= 1
+		audioTree._bnkFile.modified_hirc_chunks -= 1
+		# Only need to check if the value is 0 because when resetting the value will start non-zero
+		# so we can't reset something and have the icon need to appear.
+		if hirc_obj.change_count == 0:
+			hirc_parent.set_icon(1, null)
+		print(audioTree._bnkFile.modified_hirc_chunks)
