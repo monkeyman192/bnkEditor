@@ -82,12 +82,6 @@ margin_bottom = 22.0
 size_flags_vertical = 4
 text = "Cancel"
 
-[node name="ExportButton" type="Button" parent="ExtractRow"]
-margin_left = 610.0
-margin_right = 662.0
-margin_bottom = 24.0
-text = "Export"
-
 [node name="FilterByRow" type="HBoxContainer" parent="."]
 visible = false
 margin_top = 28.0
@@ -130,7 +124,6 @@ __meta__ = {
 [connection signal="pressed" from="ExtractRow/SelectedExtractButton" to="." method="_on_SelectedExtractButton_pressed"]
 [connection signal="pressed" from="ExtractRow/AllExtractButton" to="." method="_on_AllExtractButton_pressed"]
 [connection signal="pressed" from="ExtractRow/CancelButton" to="ExtractRow" method="_on_CancelButton_pressed"]
-[connection signal="pressed" from="ExtractRow/ExportButton" to="AudioListTree" method="_on_ExportButton_pressed"]
 [connection signal="text_entered" from="FilterByRow/filterField" to="." method="_on_filterField_text_entered"]
 [connection signal="button_pressed" from="AudioListTree" to="AudioListTree" method="_on_AudioListTree_button_pressed"]
 [connection signal="item_activated" from="AudioListTree" to="AudioListTree" method="_on_AudioListTree_item_activated"]

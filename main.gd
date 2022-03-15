@@ -5,7 +5,8 @@ const bnkXmlParser = preload("res://addons/bnk_handler/META/bnk_xml.gd")
 
 onready var tabContainer = $VBoxContainer/TabContainer
 onready var fileTree = $VBoxContainer/TabContainer/FileBrowser/FileTree
-onready var fileLabel = $VBoxContainer/TabContainer/BNKExplorer/FileSelectRow
+onready var fileLabel = $VBoxContainer/TabContainer/BNKExplorer/HBoxContainer/FileSelectRow
+onready var exportBNKButton = $VBoxContainer/TabContainer/BNKExplorer/HBoxContainer/ExportBNKButton
 onready var audioController = $VBoxContainer/NowPlayingBox
 onready var hircExplorer = $VBoxContainer/TabContainer/BNKExplorer/BNKTabs/HIRCExplorer
 onready var audioExplorer = $VBoxContainer/TabContainer/BNKExplorer/BNKTabs/AudioExplorer
@@ -133,6 +134,7 @@ func parse_xml():
 func update_file_label(filename: String):
 	# Update the text in the label to indicate the currently selected file.
 	fileLabel.text = "Currently loaded file: " + filename
+	exportBNKButton.disabled = false
 
 
 # Called when the node enters the scene tree for the first time.

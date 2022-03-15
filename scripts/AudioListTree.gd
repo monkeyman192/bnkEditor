@@ -236,7 +236,3 @@ func _on_AudioListTree_item_activated():
 			if audio_id in HIRCTree.audio_mapping:
 				BNKTabs.change_tab("hirc")
 				HIRCTree.select_sfx(audio_id)
-
-
-func _on_ExportButton_pressed():
-	self._bnkFile.write(self.bnk_fullpath + ".MODIFIED")

@@ -26,14 +26,14 @@ var state_group_id: int
 var state_id: int
 var switch_group_id: int
 var switch_id: int
-var easing_cirve: int
+var easing_curve: int
 var _end_bytes: PoolByteArray
 
 
 const EVENT_ACTIONS = [
 	HIRC_ENUMS.HIRC_03_ACTION_TYPE.PLAY,
 	HIRC_ENUMS.HIRC_03_ACTION_TYPE.STOP,
-	#TODO: Add more...
+	HIRC_ENUMS.HIRC_03_ACTION_TYPE.RESUME,
 ]
 
 
@@ -64,7 +64,7 @@ func _load(data: PoolByteArray):
 		self.switch_id = buffer.get_u32()
 	if self.action_type in EVENT_ACTIONS:
 		# Get the easing curve.
-		self.easing_cirve = buffer.get_u8()
+		self.easing_curve = buffer.get_u8()
 	self._end_bytes = buffer.get_partial_data(buffer.get_available_bytes())[1]
 
 
@@ -113,6 +113,6 @@ func _persist_changes():
 		buffer.put_u32(self.switch_group_id)
 		buffer.put_u32(self.switch_id)
 	if self.action_type in EVENT_ACTIONS:
-		buffer.put_u8(self.easing_cirve)
+		buffer.put_u8(self.easing_curve)
 	buffer.put_partial_data(self._end_bytes)
 	self._byte_pool = buffer.data_array

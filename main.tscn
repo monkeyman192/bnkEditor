@@ -117,13 +117,30 @@ margin_top = 32.0
 margin_right = -4.0
 margin_bottom = -4.0
 
-[node name="FileSelectRow" type="Label" parent="VBoxContainer/TabContainer/BNKExplorer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TabContainer/BNKExplorer"]
 margin_right = 1016.0
-margin_bottom = 14.0
+margin_bottom = 20.0
+
+[node name="FileSelectRow" type="Label" parent="VBoxContainer/TabContainer/BNKExplorer/HBoxContainer"]
+margin_top = 3.0
+margin_right = 171.0
+margin_bottom = 17.0
 text = "Currently loaded file: None"
 
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/TabContainer/BNKExplorer/HBoxContainer"]
+margin_left = 175.0
+margin_right = 179.0
+margin_bottom = 20.0
+
+[node name="ExportBNKButton" type="Button" parent="VBoxContainer/TabContainer/BNKExplorer/HBoxContainer"]
+margin_left = 183.0
+margin_right = 235.0
+margin_bottom = 20.0
+disabled = true
+text = "Export"
+
 [node name="BNKTabs" type="TabContainer" parent="VBoxContainer/TabContainer/BNKExplorer"]
-margin_top = 18.0
+margin_top = 24.0
 margin_right = 1016.0
 margin_bottom = 520.0
 size_flags_vertical = 3
@@ -160,5 +177,6 @@ script = ExtResource( 1 )
 [connection signal="finished" from="VBoxContainer/NowPlayingBox/AudioPlayer" to="VBoxContainer/NowPlayingBox" method="_on_AudioPlayer_finished"]
 [connection signal="toggled" from="VBoxContainer/NowPlayingBox/PlayPauseButton" to="VBoxContainer/NowPlayingBox" method="_on_PlayPauseButton_toggled"]
 [connection signal="pressed" from="VBoxContainer/NowPlayingBox/StopButton" to="VBoxContainer/NowPlayingBox" method="_on_StopButton_pressed"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/BNKExplorer/HBoxContainer/ExportBNKButton" to="VBoxContainer/TabContainer/BNKExplorer/BNKTabs/AudioExplorer" method="_on_ExportBNKButton_pressed"]
 [connection signal="dir_selected" from="SelectFileDialog" to="SelectFileDialog" method="_on_SelectFileDialog_dir_selected"]
 [connection signal="file_selected" from="SelectFileDialog" to="SelectFileDialog" method="_on_SelectFileDialog_file_selected"]

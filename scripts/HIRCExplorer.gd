@@ -13,10 +13,11 @@ const included_audio_texture = preload("res://icons/icon_included.svg")
 const referenced_audio_texture = preload("res://icons/icon_ref.svg")
 const edit_texture = preload("res://icons/icon_edit.svg")
 const reload_texture = preload("res://icons/icon_reload.svg")
+const add_texture = preload("res://icons/icon_add.svg")
 
 var ACTION_TYPES: String = Utils.stringify_enum(HIRC_ENUMS.HIRC_03_ACTION_TYPE)
 
-enum BUTTON_ENUM {RELOAD}
+enum BUTTON_ENUM {RELOAD, ADD}
 
 
 func _ready():
@@ -89,9 +90,9 @@ func load_HIRC_data(data: Array):
 		# Assign the hirc obj to the meta of the row so that we can more easily write to it.
 		current_child.set_metadata(0, {"_data": hirc_obj})
 		if hirc_obj.hirc_id == HIRC_ENUMS.HIRC_OBJ_TYPES._00_DUMMY:
-			current_child.set_text(0, "%s (%s)" % [hirc_obj.hirc_name, hirc_obj.type])
+			current_child.set_text(0, "%s (0x%X)" % [hirc_obj.hirc_name, hirc_obj.type])
 		else:
-			current_child.set_text(0, "%s - %s" % [hirc_obj.hirc_name, hirc_obj.id])
+			current_child.set_text(0, "%s - 0x%X" % [hirc_obj.hirc_name, hirc_obj.id])
 			update_metadata(current_child, 0, {"ref_id": hirc_obj.id})
 		match hirc_obj.hirc_id:
 			HIRC_ENUMS.HIRC_OBJ_TYPES._02_SOUND_SFX:
@@ -150,21 +151,25 @@ func process_hirc_03(data: _HIRC_03_EVENT_ACTION, treeItem: TreeItem):
 		{"_edited" : false, "_orig_value": data.action_type, "_ref": data._action_type,
 		 "_is_enum": true}
 	)
-	for param in data.additional_parameters:
-		var _param: TreeItem = self.create_item(treeItem)
-		_param.set_text(0, "%s" % Utils.back_enum(HIRC_ENUMS.HIRC_03_PARAMETER_TYPE, param[0]))
-		_param.set_text(1, "%s" % param[1])
-		_param.set_editable(1, true)
-		_param.set_metadata(1, {"_edited" : false, "_orig_value": param[1], "_ref": param})
-		if param[0] != HIRC_ENUMS.HIRC_03_PARAMETER_TYPE.PROBABILITY:
-			_param.set_suffix(1, "ms")
+	if data.additional_parameter_count != 0:
+		var _additional_params: TreeItem = self.create_item(treeItem)
+		_additional_params.set_text(0, "Additional parameters")
+		_additional_params.add_button(1, add_texture, BUTTON_ENUM.ADD, false, "Add additional parameter")
+		for param in data.additional_parameters:
+			var _param: TreeItem = self.create_item(_additional_params)
+			_param.set_text(0, "%s" % Utils.back_enum(HIRC_ENUMS.HIRC_03_PARAMETER_TYPE, param[0]))
+			_param.set_text(1, "%s" % param[1])
+			_param.set_editable(1, true)
+			_param.set_metadata(1, {"_edited" : false, "_orig_value": param[1], "_ref": param})
+			if param[0] != HIRC_ENUMS.HIRC_03_PARAMETER_TYPE.PROBABILITY:
+				_param.set_suffix(1, "ms")
 
 
 func process_hirc_04(data: _HIRC_04_EVENT, treeItem: TreeItem):
 	# Process the Event HIRC object into the provided TreeItem
 	for event in data.events:
 		var sub_item: TreeItem = self.create_item(treeItem)
-		sub_item.set_text(0, "Linked event: %s" % event)
+		sub_item.set_text(0, "Linked event: 0x%X" % event)
 		sub_item.set_metadata(1, {"ref_event_id": event})
 
 
@@ -199,9 +204,11 @@ func _on_HIRCExplorer_item_edited():
 	var val_changed: bool = false
 	# Track whether the value is different from the original
 	var val_differs: bool = false
-	# For now, assume all values will be floats. This will change once we allow enums, but fine
-	# for the moment.
-	var new_value = float(edited.get_text(1))
+	var new_value
+	if meta.get("_is_enum", false):
+		new_value = edited.get_range(1)
+	else:
+		new_value = float(edited.get_text(1))
 	if new_value != orig_value:
 		if not meta.get("_edited"):
 			# Only try and add the button if the field was not already edited.
@@ -278,3 +285,5 @@ func _on_HIRCExplorer_button_pressed(item: TreeItem, column: int, id: int):
 		if hirc_obj.change_count == 0:
 			hirc_parent.set_icon(1, null)
 		print(audioTree._bnkFile.modified_hirc_chunks)
+	elif column == 1 && id == BUTTON_ENUM.ADD:
+		print("Adding something new and exciting!")

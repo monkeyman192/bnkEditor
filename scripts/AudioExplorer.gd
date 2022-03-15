@@ -1,6 +1,5 @@
 extends Node
 
-const bnkFile = preload("res://addons/bnk_handler/BNK.gd")
 const bnkXmlParser = preload("res://addons/bnk_handler/META/bnk_xml.gd")
 
 onready var audioTree = $AudioListTree
@@ -54,3 +53,7 @@ func _on_SelectedExtractButton_pressed():
 		extractRow.extraction_state = extractRow.STATE.EXTRACTING
 		extractRow.reset()
 		main.thread.start(audioTree, "_extract_selected", convertToOggToggle.pressed)
+
+
+func _on_ExportBNKButton_pressed():
+	audioTree._bnkFile.write(audioTree.bnk_fullpath + ".MODIFIED")
