@@ -39,6 +39,17 @@ var wem_data: Dictionary
 # TODO: Maybe this will be a list. For now will be a count.
 var modified_hirc_chunks: int
 
+# Some variables to be read to allow us to hook into the import or export progress to show this on
+# the front end. This will be run in a separate thread so these values MUST only be written to from
+# within this class.
+var import_progress: int = 0
+var import_process_hirc: int = 0
+var export_progress: int = 0
+var export_progress_hirc: int = 0
+var export_subprogress: int = 0
+
+enum EXPORT_STEPS {NOTHING, BKHD, DIDX, DATA, HIRC, STID, TO_FILE, COMPLETE}
+enum HIRC_EXPORT_STEPS {NOTHING, PERSIST, WRITE}
 
 # Create a mapping between the hirc types and the objects used to load the data.
 var HIRC_MAPPING: Dictionary = {
@@ -76,8 +87,10 @@ class HIRC:
 	func persist_changes():
 		# For every HIRC object with changes, persist them to the underlying PoolByteArray so that
 		# the size calculation is correct.
+		self.export_progress_hirc = 0
 		for obj in data:
 			obj.persist_changes()
+			self.export_progress_hirc += 1
 
 	func size() -> int:
 		# Return the total size of the HIRC section. We start with 4 (the size of the count).
@@ -166,12 +179,20 @@ func write(path: String) -> int:
 	# Create a stream buffer for the output.
 	var fs = StreamPeerBuffer.new()
 	fs.big_endian = false
+	self.export_progress = EXPORT_STEPS.BKHD
 	self._write_bkhd(fs)
+	self.export_progress = EXPORT_STEPS.DIDX
 	self._write_didx(fs)
+	self.export_progress = EXPORT_STEPS.DATA
 	self._write_data(fs)
+	self.export_progress = EXPORT_STEPS.HIRC
 	self._write_hirc(fs)
+	if self.stid != null:
+		self.export_progress = EXPORT_STEPS.STID
+		self._write_stid(fs)
+	self.export_progress = EXPORT_STEPS.TO_FILE
 	f.store_buffer(fs.data_array)
-	print("Wrote bnk to %s" % path)
+	self.export_progress = EXPORT_STEPS.COMPLETE
 	return OK
 
 
@@ -330,11 +351,16 @@ func _write_hirc(buffer: StreamPeerBuffer):
 		self._file_stream.seek(self._hirc_offset)
 		buffer.put_partial_data(self._file_stream.get_partial_data(self._hirc_size)[1])
 	else:
+		self.export_subprogress = HIRC_EXPORT_STEPS.PERSIST
 		self.hirc.persist_changes()
 		buffer.put_u32(self.hirc.size())
 		buffer.put_u32(self.hirc.object_count)
+		self.export_subprogress = HIRC_EXPORT_STEPS.WRITE
+		self.export_progress_hirc = 0
 		for obj in self.hirc.data:
 			buffer.put_partial_data(obj.byte_pool())
+			self.export_progress_hirc += 1
+		self.export_subprogress = HIRC_EXPORT_STEPS.NOTHING
 
 
 func _read_stid():
@@ -346,6 +372,10 @@ func _read_stid():
 		var name_length = self._file_stream.get_u8()
 		var soundbank_name = self._read_string(self._file_stream, name_length)
 		self.stid.soundbank_data[soundbank_id] = soundbank_name
+
+
+func _write_stid(buffer: StreamPeerBuffer):
+	pass
 
 
 func _read_string(stream: StreamPeerBuffer, size: int) -> String:

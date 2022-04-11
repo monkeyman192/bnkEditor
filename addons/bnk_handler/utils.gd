@@ -56,9 +56,9 @@ static func back_enum(_enum, value) -> String:
 	# Get the string of the key associated with the provided value.
 	var idx: int = _enum.values().find(value)
 	if idx != -1:
-		return _enum.keys()[idx]
+		return _enum.keys()[idx].capitalize()
 	else:
-		return ""
+		return "Unmapped value: %s" % value
 
 
 static func stringify_enum(_enum) -> String:

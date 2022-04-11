@@ -9,4 +9,4 @@ var chunk_size: int
 
 
 func _to_string() -> String:
-    return "Dummy HIRC entry of type %s" % self.type
+    return "Dummy HIRC entry of type %s" % self.hirc_type

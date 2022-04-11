@@ -17,12 +17,14 @@ onready var BNKTabs = get_node("../..")
 
 enum EXTRACTION_MODE {SELECTED, ALL}
 
-var audio_tree_data: Dictionary = {}
+var audio_text_data: Dictionary = {}
 var audio_mapping: Dictionary = {}
 var bnk_fullpath: String = ""
 var _bnkFile
 var root: TreeItem
 var program_settings: Dictionary
+var total_count: int = 0
+var filtered_count: int = 0
 
 
 func _ready():
@@ -137,6 +139,109 @@ func get_contained_audio(method: int) -> Dictionary:
 	return data
 
 
+func get_next_row(after: TreeItem, loop: bool = true) -> TreeItem:
+	# Return the next item in the tree including parent items etc.
+	# If the item has children, then we should return the first one.
+	var child = after.get_children()
+	if child:
+		return child
+	# If no children, then see if there is a next item and return this.
+	var next = after.get_next()
+	if next:
+		return next
+	# If no next one then we may be at the bottom of a set of children nodes. Get the parent and
+	# then get the next.
+	var parent = after.get_parent()
+	if parent:
+		next = parent.get_next()
+		if next:
+			return next
+		else:
+			# In this case I think we have probably hit the bottom. If we want to loop back to the
+			# top, do so.
+			if loop:
+				return self.get_root().get_children()
+	return null
+
+
+func _get_last_child(node: TreeItem) -> TreeItem:
+	# Return the last child node of the given node.
+	var child = node.get_children()
+	while child:
+		var _child = child.get_next()
+		# Check to see if the next child is null or not. If it isn't then we want to continue.
+		# If it is null, then we return the last non-null child.
+		if not _child:
+			return child
+		child = _child
+	return null
+
+
+func get_prev_row(before: TreeItem, loop: bool = true) -> TreeItem:
+	# Return the next item in the tree including parent items etc.
+	# If the item has children, then we should return the first one.
+	var prev = before.get_prev()
+	if prev:
+		# If the prev value has children, then we need to go through the children and find the last
+		# one.
+		if prev.get_children() != null:
+			return self._get_last_child(prev)
+		else:
+			return prev
+	# If there is no previous one we are either at the start of a child node set, or a the very
+	# start of the tree.
+	var parent = before.get_parent()
+	if parent && parent != self.get_root():
+		# In this case, `before` was the first element of a child, so return the parent.
+		return parent
+	else:
+		# In this case we are at the very first row of the tree.
+		if loop:
+			var last = self._get_last_child(self.get_root())
+			if last.get_children() != null:
+				return self._get_last_child(last)
+			else:
+				return last
+	return null
+
+
+func go_to_next_filtered():
+	var curr_selected = self.get_selected()
+	if curr_selected == null:
+		# If nothing is selected, then select the first child of the root and then move forward to
+		# find the first selected object.
+		curr_selected = self.get_root().get_children()
+	var next = self.get_next_row(curr_selected)
+	# We can "safely" have an endless loop like this because we know that there must be another
+	# row which is green because the option of there being 0 or 1 rows has already been covered
+	while next.get_custom_color(0) != Color.green:
+		next = self.get_next_row(next)
+	# Once have the next one, deselect the old one, scroll to the next one then select it.
+	curr_selected.deselect(0)
+	next.select(0)
+	var next_parent = next.get_parent()
+	if next_parent && next_parent != self.get_root():
+		next_parent.collapsed = false
+	self.scroll_to_item(next)
+
+
+func go_to_prev_filtered():
+	var curr_selected = self.get_selected()
+	if curr_selected == null:
+		curr_selected = self.get_root().get_children()
+	var prev = self.get_prev_row(curr_selected)
+	# We can "safely" have an endless loop like this because we know that there must be another
+	# row which is green because the option of there being 0 or 1 rows has already been covered
+	while prev.get_custom_color(0) != Color.green:
+		prev = self.get_prev_row(prev)
+	curr_selected.deselect(0)
+	prev.select(0)
+	var prev_parent = prev.get_parent()
+	if prev_parent && prev_parent != self.get_root():
+		prev_parent.collapsed = false
+	self.scroll_to_item(prev)
+
+
 func deselect_all():
 	# Deselect all the currently selected items in the tree.
 	var curr_selected = self.get_next_selected(null)
@@ -150,7 +255,7 @@ func deselect_all():
 
 func select_audio(audio_id: int) -> int:
 	# Scroll to and select the audio with the specified id.
-	var req_treeItem = audio_mapping.get(audio_id)
+	var req_treeItem = self.audio_mapping.get(audio_id)
 	if req_treeItem != null:
 		self.deselect_all()
 		req_treeItem.select(0)
@@ -171,7 +276,9 @@ func populate_audio_tree(data: Dictionary):
 		var value = data[key]
 		var current_child = self.create_item(root)
 		current_child.set_text(0, key)
+		self.audio_text_data[key.to_lower()] = current_child
 		current_child.collapsed = true
+		self.total_count += 1
 		# Each event has a number of files within it.
 		for v in value:
 			var sub_child: TreeItem = self.create_item(current_child)
@@ -183,7 +290,9 @@ func populate_audio_tree(data: Dictionary):
 				sub_child.set_icon(0, included_audio_texture)
 			else:
 				sub_child.set_icon(0, referenced_audio_texture)
-			audio_mapping[v[1]] = sub_child
+			self.audio_mapping[v[1]] = sub_child
+			self.audio_text_data[v[0].to_lower()] = sub_child
+			self.total_count += 1
 
 
 func _on_AudioListTree_button_pressed(item: TreeItem, column: int, id: int):

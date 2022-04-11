@@ -10,6 +10,7 @@ var _byte_pool: PoolByteArray
 var hirc_type: int
 var change_count: int = 0
 var size: int = 0 setget ,_get_size
+var _end_bytes: PoolByteArray
 
 func load(type: int, data: PoolByteArray):
 	# Initial entry point for loading the HIRC chunk.
@@ -58,7 +59,6 @@ func persist_changes():
 	if self.change_count == 0:
 		return
 	# If we have actual changes, then we need to do something
-	print("doing something in %s" % self.hirc_type)
 	self._persist_changes()
 
 

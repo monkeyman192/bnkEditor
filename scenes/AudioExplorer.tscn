@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://scripts/AudioListTree.gd" type="Script" id=1]
 [ext_resource path="res://scripts/AudioExplorer.gd" type="Script" id=2]
 [ext_resource path="res://scripts/ExtractRow.gd" type="Script" id=3]
+[ext_resource path="res://icons/icon_arrow_up.svg" type="Texture" id=4]
+[ext_resource path="res://icons/icon_arrow_down.svg" type="Texture" id=5]
 
 [node name="AudioExplorer" type="VBoxContainer"]
 anchor_right = 1.0
@@ -83,7 +85,6 @@ size_flags_vertical = 4
 text = "Cancel"
 
 [node name="FilterByRow" type="HBoxContainer" parent="."]
-visible = false
 margin_top = 28.0
 margin_right = 1024.0
 margin_bottom = 52.0
@@ -99,18 +100,44 @@ text = "Filter by:"
 
 [node name="filterField" type="LineEdit" parent="FilterByRow"]
 margin_left = 60.0
-margin_right = 975.0
+margin_right = 951.0
 margin_bottom = 24.0
 size_flags_horizontal = 3
 
 [node name="filterButton" type="Button" parent="FilterByRow"]
-margin_left = 979.0
-margin_right = 1024.0
+visible = false
+margin_left = 939.0
+margin_right = 984.0
 margin_bottom = 24.0
 text = "Filter"
 
+[node name="filterCountLabel" type="Label" parent="FilterByRow"]
+margin_left = 955.0
+margin_top = 5.0
+margin_right = 984.0
+margin_bottom = 19.0
+text = "(0/0)"
+
+[node name="prevButton" type="TextureButton" parent="FilterByRow"]
+margin_left = 988.0
+margin_top = 4.0
+margin_right = 1004.0
+margin_bottom = 20.0
+size_flags_vertical = 4
+texture_normal = ExtResource( 4 )
+stretch_mode = 3
+
+[node name="nextButton" type="TextureButton" parent="FilterByRow"]
+margin_left = 1008.0
+margin_top = 4.0
+margin_right = 1024.0
+margin_bottom = 20.0
+size_flags_vertical = 4
+texture_normal = ExtResource( 5 )
+stretch_mode = 3
+
 [node name="AudioListTree" type="Tree" parent="."]
-margin_top = 28.0
+margin_top = 56.0
 margin_right = 1024.0
 margin_bottom = 600.0
 size_flags_vertical = 3
@@ -124,6 +151,9 @@ __meta__ = {
 [connection signal="pressed" from="ExtractRow/SelectedExtractButton" to="." method="_on_SelectedExtractButton_pressed"]
 [connection signal="pressed" from="ExtractRow/AllExtractButton" to="." method="_on_AllExtractButton_pressed"]
 [connection signal="pressed" from="ExtractRow/CancelButton" to="ExtractRow" method="_on_CancelButton_pressed"]
+[connection signal="text_changed" from="FilterByRow/filterField" to="." method="_on_filterField_text_changed"]
 [connection signal="text_entered" from="FilterByRow/filterField" to="." method="_on_filterField_text_entered"]
+[connection signal="pressed" from="FilterByRow/prevButton" to="." method="_on_prevButton_pressed"]
+[connection signal="pressed" from="FilterByRow/nextButton" to="." method="_on_nextButton_pressed"]
 [connection signal="button_pressed" from="AudioListTree" to="AudioListTree" method="_on_AudioListTree_button_pressed"]
 [connection signal="item_activated" from="AudioListTree" to="AudioListTree" method="_on_AudioListTree_item_activated"]

@@ -6,7 +6,7 @@ const hirc_id: int = HIRC_ENUMS.HIRC_OBJ_TYPES._03_EVENT_ACTION
 const hirc_name: String = "Event Action"
 
 const INT_PARAM_TYPES = [
-	HIRC_ENUMS.HIRC_03_PARAMETER_TYPE.DELAY,
+	HIRC_ENUMS.HIRC_03_PARAMETER_TYPE.DELAY_TIME,
 	HIRC_ENUMS.HIRC_03_PARAMETER_TYPE.FADE_IN_TIME,
 ]
 const FLOAT_PARAM_TYPES = [
@@ -27,7 +27,6 @@ var state_id: int
 var switch_group_id: int
 var switch_id: int
 var easing_curve: int
-var _end_bytes: PoolByteArray
 
 
 const EVENT_ACTIONS = [

@@ -173,5 +173,9 @@ func load_bnk(bnk_path: String):
 		var atd: Dictionary = bnkXmlParser.new().parse_bnk_xml(bnk_xml)
 		audioTree.populate_audio_tree(atd)
 		update_file_label(bnk_path.get_file().get_basename() + ".BNK")
+		# When we initially load it, there will be no filter so the total count and filter count
+		# will be the same.
+		audioTree.filtered_count = audioTree.total_count
+		audioExplorer.set_filter_count()
 		print("Finished loading the file into the other view...")
 		tabContainer.current_tab = 0

@@ -90,7 +90,7 @@ func load_HIRC_data(data: Array):
 		# Assign the hirc obj to the meta of the row so that we can more easily write to it.
 		current_child.set_metadata(0, {"_data": hirc_obj})
 		if hirc_obj.hirc_id == HIRC_ENUMS.HIRC_OBJ_TYPES._00_DUMMY:
-			current_child.set_text(0, "%s (0x%X)" % [hirc_obj.hirc_name, hirc_obj.type])
+			current_child.set_text(0, "%s (0x%X)" % [hirc_obj.hirc_name, hirc_obj.hirc_type])
 		else:
 			current_child.set_text(0, "%s - 0x%X" % [hirc_obj.hirc_name, hirc_obj.id])
 			update_metadata(current_child, 0, {"ref_id": hirc_obj.id})
@@ -154,7 +154,7 @@ func process_hirc_03(data: _HIRC_03_EVENT_ACTION, treeItem: TreeItem):
 	if data.additional_parameter_count != 0:
 		var _additional_params: TreeItem = self.create_item(treeItem)
 		_additional_params.set_text(0, "Additional parameters")
-		_additional_params.add_button(1, add_texture, BUTTON_ENUM.ADD, false, "Add additional parameter")
+		# _additional_params.add_button(1, add_texture, BUTTON_ENUM.ADD, false, "Add additional parameter")
 		for param in data.additional_parameters:
 			var _param: TreeItem = self.create_item(_additional_params)
 			_param.set_text(0, "%s" % Utils.back_enum(HIRC_ENUMS.HIRC_03_PARAMETER_TYPE, param[0]))
@@ -221,7 +221,6 @@ func _on_HIRCExplorer_item_edited():
 		else:
 			# For now the only other option is that the reference is a dictionary.
 			_ref["value"] = new_value
-			print(_ref)
 		val_differs = true
 	else:
 		if meta.get("_edited"):
@@ -250,7 +249,6 @@ func _on_HIRCExplorer_item_edited():
 			hirc_parent.set_icon(1, edit_texture)
 		else:
 			hirc_parent.set_icon(1, null)
-		print(audioTree._bnkFile.modified_hirc_chunks)
 
 
 func _on_HIRCExplorer_button_pressed(item: TreeItem, column: int, id: int):
@@ -284,6 +282,5 @@ func _on_HIRCExplorer_button_pressed(item: TreeItem, column: int, id: int):
 		# so we can't reset something and have the icon need to appear.
 		if hirc_obj.change_count == 0:
 			hirc_parent.set_icon(1, null)
-		print(audioTree._bnkFile.modified_hirc_chunks)
 	elif column == 1 && id == BUTTON_ENUM.ADD:
 		print("Adding something new and exciting!")

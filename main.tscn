@@ -139,6 +139,38 @@ margin_bottom = 20.0
 disabled = true
 text = "Export"
 
+[node name="ProgressLabel" type="Label" parent="VBoxContainer/TabContainer/BNKExplorer/HBoxContainer"]
+margin_left = 239.0
+margin_top = 3.0
+margin_right = 298.0
+margin_bottom = 17.0
+text = "Progress:"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ExportProgressBar" type="ProgressBar" parent="VBoxContainer/TabContainer/BNKExplorer/HBoxContainer"]
+margin_left = 302.0
+margin_top = 2.0
+margin_right = 502.0
+margin_bottom = 18.0
+rect_min_size = Vector2( 200, 16 )
+size_flags_vertical = 4
+max_value = 6.0
+step = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ExportProgressLabel" type="Label" parent="VBoxContainer/TabContainer/BNKExplorer/HBoxContainer"]
+margin_left = 506.0
+margin_top = 3.0
+margin_right = 506.0
+margin_bottom = 17.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [node name="BNKTabs" type="TabContainer" parent="VBoxContainer/TabContainer/BNKExplorer"]
 margin_top = 24.0
 margin_right = 1016.0
