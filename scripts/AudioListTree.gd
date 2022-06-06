@@ -5,6 +5,8 @@ const included_audio_texture = preload("res://icons/icon_included.svg")
 const referenced_audio_texture = preload("res://icons/icon_ref.svg")
 const play_unconverted_texture = preload("res://icons/icon_play.svg")
 const play_converted_texture = preload("res://icons/icon_play_green.svg")
+const edit_texture = preload("res://icons/icon_edit.svg")
+const reload_texture = preload("res://icons/icon_reload.svg")
 
 const wemFile = preload("res://addons/bnk_handler/WEM.gd")
 const bnkXmlParser = preload("res://addons/bnk_handler/META/bnk_xml.gd")
@@ -14,8 +16,10 @@ onready var audioController = get_tree().get_root().get_node("main/VBoxContainer
 onready var extractionRow = get_node("../ExtractRow")
 onready var HIRCTree = get_node("../../HIRCExplorer")
 onready var BNKTabs = get_node("../..")
+onready var selectFileDialog = get_tree().get_root().get_node("main/SelectFileDialog")
 
 enum EXTRACTION_MODE {SELECTED, ALL}
+enum BUTTON_ENUM {PLAY, REPLACE, RELOAD}
 
 var audio_text_data: Dictionary = {}
 var audio_mapping: Dictionary = {}
@@ -25,6 +29,7 @@ var root: TreeItem
 var program_settings: Dictionary
 var total_count: int = 0
 var filtered_count: int = 0
+var current_replacing_wem
 
 
 func _ready():
@@ -42,6 +47,14 @@ func _extract_all(to_ogg: bool = false):
 
 func _extract_selected(to_ogg: bool = false):
 	self.extract(EXTRACTION_MODE.SELECTED, to_ogg)
+
+
+func update_metadata(item: TreeItem, column: int, meta: Dictionary):
+	# Update the current meta dictionary with the provided one, in the same way that python
+	# provides an `update` method on dictionaries.
+	var curr_meta = item.get_metadata(column)
+	for key in meta:
+		curr_meta[key] = meta[key]
 
 
 func extract(method: int = EXTRACTION_MODE.SELECTED, to_ogg: bool = false):
@@ -266,6 +279,31 @@ func select_audio(audio_id: int) -> int:
 		return FAILED
 
 
+func replace_audio(path: String):
+	# Replace the current replacing wem with the given path.
+	if current_replacing_wem:
+		var f = File.new()
+		var wem_data: PoolByteArray
+		var err: int = f.open(path, f.READ)
+		if err != OK:
+			print("There was an error: %s" % err)
+			return err
+		wem_data = f.get_buffer(f.get_len())
+		f.close()
+		# First, replace the wem in the bnk file
+		var replacing_audio_id: int = int(current_replacing_wem.get_metadata(0)["audio_id"])
+		self._bnkFile.modify_wem(replacing_audio_id, wem_data)
+		# Then, get the associated SFX HIRC chunk and update the file length.
+		var associated_SFX = self.audio_mapping.get(replacing_audio_id)
+		var hirc_obj = associated_SFX.get_metadata(0)["_data"]
+		hirc_obj.change_count += 1
+		self._bnkFile.modified_hirc_chunks += 1
+		# TODO: Make this work...
+		var orig_text = current_replacing_wem.get_text(0).split(" -> ")[0]
+		current_replacing_wem.set_text(0, "%s -> %s" % [orig_text, path])
+		current_replacing_wem.add_button(0, reload_texture, BUTTON_ENUM.RELOAD, false, "Revert to original")
+
+
 func populate_audio_tree(data: Dictionary):
 	# Populate the audio tree from the dictionary.
 	self.clear()
@@ -283,21 +321,22 @@ func populate_audio_tree(data: Dictionary):
 		for v in value:
 			var sub_child: TreeItem = self.create_item(current_child)
 			sub_child.set_text(0, v[0])
-			sub_child.set_tooltip(0, "ID: %s" % v[1])
 			sub_child.set_metadata(0, {"audio_id": v[1], "location": v[2]})
-			sub_child.add_button(0, play_unconverted_texture, -1, false, "PLAY")
+			sub_child.add_button(0, play_unconverted_texture, BUTTON_ENUM.PLAY, false, "Play")
+			sub_child.add_button(0, edit_texture, BUTTON_ENUM.REPLACE, false, "Replace")
 			if v[2] == bnkXmlParser.AUDIO_TYPE.INCLUDED:
 				sub_child.set_icon(0, included_audio_texture)
+				sub_child.set_tooltip(0, "ID: %s (Embedded)" % v[1])
 			else:
 				sub_child.set_icon(0, referenced_audio_texture)
+				sub_child.set_tooltip(0, "ID: %s (Referenced)" % v[1])
 			self.audio_mapping[v[1]] = sub_child
 			self.audio_text_data[v[0].to_lower()] = sub_child
 			self.total_count += 1
 
 
 func _on_AudioListTree_button_pressed(item: TreeItem, column: int, id: int):
-	if id == 0:
-		# Play button has id 0.
+	if id == BUTTON_ENUM.PLAY:
 		var meta: Dictionary = item.get_metadata(column)
 		var audio_id = meta["audio_id"]
 		var audio_loc = meta["location"]
@@ -317,6 +356,19 @@ func _on_AudioListTree_button_pressed(item: TreeItem, column: int, id: int):
 			# In this case the event has no associated audio, so do nothing (if we got here
 			# somehow...)
 			return
+	elif id == BUTTON_ENUM.REPLACE:
+		# Assign the item as the current replacing wem line.
+		current_replacing_wem = item
+		selectFileDialog.window_title = "Select a wem to replace"
+		selectFileDialog.current_function = selectFileDialog.FUNCTION.SELECT_WEM
+		selectFileDialog.mode = FileDialog.MODE_OPEN_FILE
+		selectFileDialog.set_filters(PoolStringArray(["*.wem ; WEM files"]))
+		selectFileDialog.show()
+	elif id == BUTTON_ENUM.RELOAD:
+		current_replacing_wem.erase_button(1, BUTTON_ENUM.RELOAD)
+		var orig_text = current_replacing_wem.get_text(0).split(" -> ")[0]
+		current_replacing_wem.set_text(0, orig_text)
+		self._bnkFile.remove_modified_wem(int(current_replacing_wem.get_metadata(0)["audio_id"]))
 
 
 func get_audio_path(audio_id: int) -> String:

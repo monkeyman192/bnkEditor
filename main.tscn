@@ -171,6 +171,13 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/BNKExplorer/HBoxContainer"]
+visible = false
+margin_left = 510.0
+margin_top = 3.0
+margin_right = 510.0
+margin_bottom = 17.0
+
 [node name="BNKTabs" type="TabContainer" parent="VBoxContainer/TabContainer/BNKExplorer"]
 margin_top = 24.0
 margin_right = 1016.0

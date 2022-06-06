@@ -38,6 +38,9 @@ var wem_data: Dictionary
 # original HIRC chunk back as it was.
 # TODO: Maybe this will be a list. For now will be a count.
 var modified_hirc_chunks: int
+# Keep a dictionary of modified wems. The keys are the ids they replace, and the value is the data
+# for the wem.
+var modified_wems: Dictionary = {}
 
 # Some variables to be read to allow us to hook into the import or export progress to show this on
 # the front end. This will be run in a separate thread so these values MUST only be written to from
@@ -193,7 +196,16 @@ func write(path: String) -> int:
 	self.export_progress = EXPORT_STEPS.TO_FILE
 	f.store_buffer(fs.data_array)
 	self.export_progress = EXPORT_STEPS.COMPLETE
+	print("Wrote to %s" % path)
 	return OK
+
+
+func modify_wem(id: int, data: PoolByteArray):
+	self.modified_wems[id] = data
+
+
+func remove_modified_wem(id: int):
+	self.modified_wems.erase(id)
 
 
 func _read_file(bnk_length: int, preload_data: bool = false):
@@ -284,13 +296,17 @@ func _write_didx(buffer: StreamPeerBuffer):
 	var offset = 0
 
 	for audio_id in audio_ids:
-		var entry: DIDX_entry = self.didx.id_mapping[audio_id]
+		var size: int
+		if audio_id in self.modified_wems:
+			size = self.modified_wems[audio_id].size()
+		else:
+			size = self.didx.id_mapping[audio_id].file_size
 		buffer.put_u32(audio_id)
 		buffer.put_u32(offset)
-		buffer.put_u32(entry.file_size)
+		buffer.put_u32(size)
 
 		# Now, update the offset so that the next file will have the correct offset.
-		offset += entry.offset
+		offset += size
 		offset += 4 - (offset % 4)
 
 
@@ -317,13 +333,39 @@ func _write_data(buffer: StreamPeerBuffer):
 	# Before we write anything, we need to determine if anything has changed. If nothing has then
 	# we can just write the entire data chunk from the original bank file by reading the whole
 	# chunk from one buffer to another.
-	if self.wem_data.size() == 0:
+	if self.modified_wems.size() == 0:
 		buffer.put_u32(self._data_size)
 		self._file_stream.seek(self._data_offset)
 		buffer.put_partial_data(self._file_stream.get_partial_data(self._data_size)[1])
 	else:
-		print("NOT SUPPORTED YET!")
+		var audio_ids = self.didx.id_mapping.keys()
+		audio_ids.sort()
 
+		var data_size: int = 0
+
+		# First, write the total size to be 0 so we can reserve it for later.
+		var data_size_loc = buffer.get_position()
+
+		for id in audio_ids:
+			# Write bytes before audio so that we always aligned to 4 bytes.
+			var extra_bytes = 4 - (data_size % 4)
+			for n in extra_bytes:
+				buffer.put_u8(0)
+			if not id in self.modified_wems:
+				# Write the unmodified wems.
+				var _wem_data: DIDX_entry = self.didx.id_mapping[id]
+				self._file_stream.seek(self.data_size + _wem_data.offset)
+				buffer.put_partial_data(self._file_stream.get_partial_data(_wem_data.file_size)[1])
+				data_size += _wem_data.file_size
+			else:
+				# Write the modified wems.
+				var orig_loc = buffer.get_position()
+				buffer.put_partial_data(self.modified_wems[id])
+				data_size += (buffer.get_position() - orig_loc)
+		var end_pos = buffer.get_position()
+		buffer.seek(data_size_loc)
+		buffer.put_u32(data_size)
+		buffer.seek(end_pos)
 
 func _read_hirc():
 	self.hirc.object_count = self._file_stream.get_u32()

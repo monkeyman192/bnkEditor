@@ -44,7 +44,7 @@ func deselect_all():
 
 func select_sfx(audio_id: int) -> int:
 	# Scroll to and select the audio with the specified id.
-	var req_treeItem = audio_mapping.get(audio_id)
+	var req_treeItem = self.audio_mapping.get(audio_id)
 	if req_treeItem != null:
 		self.deselect_all()
 		req_treeItem.select(0)
@@ -116,7 +116,7 @@ func process_hirc_02(data: _HIRC_02_SOUND_SFX, treeItem: TreeItem):
 	_audio_id.set_text(0, "Audio ID:")
 	_audio_id.set_text(1, "%s" % data.audio_id)
 	# Add the audio id to the audio mapping so that we can find this particular sound sfx.
-	audio_mapping[data.audio_id] = treeItem
+	self.audio_mapping[data.audio_id] = treeItem
 	_audio_id.set_metadata(1, {"ref_audio_id": data.audio_id})
 	var _audio_size: TreeItem = self.create_item(treeItem)
 	_audio_size.set_text(0, "Audio size:")

@@ -2,3 +2,4 @@
 *.bnk
 bin/*
 data/*
+*.wem

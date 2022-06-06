@@ -4,6 +4,7 @@ const bnkFile = preload("res://addons/bnk_handler/BNK.gd")
 const bnkXmlParser = preload("res://addons/bnk_handler/META/bnk_xml.gd")
 
 onready var tabContainer = $VBoxContainer/TabContainer
+onready var templabel = $VBoxContainer/TabContainer/BNKExplorer/HBoxContainer/Label
 onready var fileTree = $VBoxContainer/TabContainer/FileBrowser/FileTree
 onready var fileLabel = $VBoxContainer/TabContainer/BNKExplorer/HBoxContainer/FileSelectRow
 onready var exportBNKButton = $VBoxContainer/TabContainer/BNKExplorer/HBoxContainer/ExportBNKButton
@@ -24,6 +25,8 @@ const SETTINGS_FILE = "user://settings/settings.json"
 # A spearate thread to do stuff in.
 var thread: Thread
 
+var cmdline_args: Dictionary = {}
+
 
 # Dictionary to keep track of all the settings. This will be written when a setting is changed,
 # and loaded when the program is opened.
@@ -31,6 +34,24 @@ var program_settings = {
 	"export_path": "",
 	"data_dir": ""
 }
+
+
+func parse_command_line_args():
+	# Parse the argument list to an array.
+	var arg_list: Array = []
+	print(OS.get_cmdline_args())
+	for argument in OS.get_cmdline_args():
+		if "=" in argument:
+			var key_value = argument.split("=")
+			arg_list.append(key_value[0].lstrip("--"))
+			arg_list.append(key_value[1])
+		else:
+			arg_list.append(argument.lstrip("--"))
+	# Remove the first element of the array as it will be the path to the binary.
+	print(arg_list)
+	# Take the array and map to a dictionary.
+	for i in range(arg_list.size() / 2):
+		cmdline_args[arg_list[2 * i]] = arg_list[2 * i + 1]
 
 
 func load_settings():
@@ -141,6 +162,8 @@ func update_file_label(filename: String):
 func _ready():
 	# First, load the settings.
 	load_settings()
+	parse_command_line_args()
+	templabel.text = String(cmdline_args)
 	thread = Thread.new()
 	# Start the directory load in a separate thread to avoid locking the UI.
 	thread.start(self, "load_current_directory")
