@@ -284,21 +284,26 @@ func replace_audio(path: String):
 	if current_replacing_wem:
 		var f = File.new()
 		var wem_data: PoolByteArray
+		var wem_length: int
 		var err: int = f.open(path, f.READ)
 		if err != OK:
 			print("There was an error: %s" % err)
 			return err
-		wem_data = f.get_buffer(f.get_len())
+		wem_length = f.get_len()
+		wem_data = f.get_buffer(wem_length)
 		f.close()
 		# First, replace the wem in the bnk file
 		var replacing_audio_id: int = int(current_replacing_wem.get_metadata(0)["audio_id"])
 		self._bnkFile.modify_wem(replacing_audio_id, wem_data)
 		# Then, get the associated SFX HIRC chunk and update the file length.
-		var associated_SFX = self.audio_mapping.get(replacing_audio_id)
+		var associated_SFX = HIRCTree.audio_mapping.get(replacing_audio_id)
 		var hirc_obj = associated_SFX.get_metadata(0)["_data"]
 		hirc_obj.change_count += 1
+		hirc_obj.audio_size.value = wem_length
+		# Get the 3rd child of the TreeItem
+		var child = associated_SFX.get_children()
+		child.get_next().get_next().set_text(1, "%s bytes" % wem_length)
 		self._bnkFile.modified_hirc_chunks += 1
-		# TODO: Make this work...
 		var orig_text = current_replacing_wem.get_text(0).split(" -> ")[0]
 		current_replacing_wem.set_text(0, "%s -> %s" % [orig_text, path])
 		current_replacing_wem.add_button(0, reload_texture, BUTTON_ENUM.RELOAD, false, "Revert to original")
@@ -369,6 +374,18 @@ func _on_AudioListTree_button_pressed(item: TreeItem, column: int, id: int):
 		var orig_text = current_replacing_wem.get_text(0).split(" -> ")[0]
 		current_replacing_wem.set_text(0, orig_text)
 		self._bnkFile.remove_modified_wem(int(current_replacing_wem.get_metadata(0)["audio_id"]))
+
+		# Reset the changes to the byte size in the associated SFX
+		var replacing_audio_id: int = int(current_replacing_wem.get_metadata(0)["audio_id"])
+		# Then, get the associated SFX HIRC chunk and update the file length.
+		var associated_SFX = HIRCTree.audio_mapping.get(replacing_audio_id)
+		var hirc_obj = associated_SFX.get_metadata(0)["_data"]
+		hirc_obj.change_count -= 1
+		hirc_obj.audio_size.reset()
+		# Get the 3rd child of the TreeItem
+		var child = associated_SFX.get_children()
+		child.get_next().get_next().set_text(1, "%s bytes" % hirc_obj.audio_size.value)
+		self._bnkFile.modified_hirc_chunks -= 1
 
 
 func get_audio_path(audio_id: int) -> String:

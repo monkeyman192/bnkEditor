@@ -10,7 +10,7 @@ var plugin_id: int
 var _inc_or_streamed: int
 var inc_or_streamed: String setget ,_get_inc_or_streamed
 var audio_id: int
-var audio_size: int
+var audio_size: HIRC_field
 var _sound_type: int
 var embedded_offset: int
 var embedded_size: int
@@ -24,7 +24,7 @@ func _load(data: PoolByteArray):
 	self.plugin_id = buffer.get_u32()
 	self._inc_or_streamed = buffer.get_u8()
 	self.audio_id = buffer.get_u32()
-	self.audio_size = buffer.get_u32()
+	self.audio_size = HIRC_field.new(buffer.get_u32())
 	self._sound_type = buffer.get_u8()
 	var ss = SoundStructure.new()
 	self.sound_structure = ss.load(buffer)
@@ -49,7 +49,7 @@ func _persist_changes():
 	buffer.put_u32(self.plugin_id)
 	buffer.put_u8(self._inc_or_streamed)
 	buffer.put_u32(self.audio_id)
-	buffer.put_u32(self.audio_size)
+	buffer.put_u32(self.audio_size.value)
 	buffer.put_u8(self._sound_type)
 	buffer.put_partial_data(self.sound_structure.serialize())
 	buffer.put_partial_data(self._end_bytes)

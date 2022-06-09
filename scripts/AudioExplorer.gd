@@ -111,7 +111,7 @@ func _process(_delta):
 		if audioTree._bnkFile.export_progress == bnkFile.EXPORT_STEPS.HIRC:
 			if audioTree._bnkFile.export_subprogress != bnkFile.HIRC_EXPORT_STEPS.NOTHING:
 				exportProgressLabel.text = "%s" % export_mapping[bnk_progress] + " (%s / %s)" % [
-					audioTree._bnkFile.export_progress_hirc,
+					audioTree._bnkFile.hirc.export_progress_hirc,
 					audioTree._bnkFile.hirc.object_count
 				]
 		exportProgressBar.value = bnk_progress

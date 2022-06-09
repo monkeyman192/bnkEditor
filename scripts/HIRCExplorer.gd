@@ -120,7 +120,7 @@ func process_hirc_02(data: _HIRC_02_SOUND_SFX, treeItem: TreeItem):
 	_audio_id.set_metadata(1, {"ref_audio_id": data.audio_id})
 	var _audio_size: TreeItem = self.create_item(treeItem)
 	_audio_size.set_text(0, "Audio size:")
-	_audio_size.set_text(1, "%s bytes" % data.audio_size)
+	_audio_size.set_text(1, "%s bytes" % data.audio_size.value)
 	if data.sound_structure.additional_params.size() != 0:
 		var _additional_params: TreeItem = self.create_item(treeItem)
 		_additional_params.set_text(0, "Additional parameters")

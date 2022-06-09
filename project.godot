@@ -39,6 +39,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/bnk_handler/HIRC/HIRC.gd"
 }, {
+"base": "Reference",
+"class": "HIRC_field",
+"language": "GDScript",
+"path": "res://addons/bnk_handler/HIRC/HIRC_field.gd"
+}, {
 "base": "BitWiseStreamPeerBuffer",
 "class": "OGG",
 "language": "GDScript",
@@ -101,6 +106,7 @@ _global_script_class_icons={
 "BitWiseStreamPeerBuffer": "",
 "Codebook": "",
 "HIRC_OBJ": "",
+"HIRC_field": "",
 "OGG": "",
 "Packet": "",
 "SoundStructure": "",

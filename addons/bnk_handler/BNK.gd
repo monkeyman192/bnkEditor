@@ -48,7 +48,6 @@ var modified_wems: Dictionary = {}
 var import_progress: int = 0
 var import_process_hirc: int = 0
 var export_progress: int = 0
-var export_progress_hirc: int = 0
 var export_subprogress: int = 0
 
 enum EXPORT_STEPS {NOTHING, BKHD, DIDX, DATA, HIRC, STID, TO_FILE, COMPLETE}
@@ -86,6 +85,8 @@ class DIDX:
 class HIRC:
 	var object_count: int
 	var data: Array = []
+
+	var export_progress_hirc: int = 0
 
 	func persist_changes():
 		# For every HIRC object with changes, persist them to the underlying PoolByteArray so that
@@ -398,10 +399,10 @@ func _write_hirc(buffer: StreamPeerBuffer):
 		buffer.put_u32(self.hirc.size())
 		buffer.put_u32(self.hirc.object_count)
 		self.export_subprogress = HIRC_EXPORT_STEPS.WRITE
-		self.export_progress_hirc = 0
+		self.hirc.export_progress_hirc = 0
 		for obj in self.hirc.data:
 			buffer.put_partial_data(obj.byte_pool())
-			self.export_progress_hirc += 1
+			self.hirc.export_progress_hirc += 1
 		self.export_subprogress = HIRC_EXPORT_STEPS.NOTHING
 
 
